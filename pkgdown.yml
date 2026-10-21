@@ -1,0 +1,17 @@
+pandoc: 3.8.3
+pkgdown: 2.2.1
+pkgdown_sha: ~
+articles:
+  conflicts-configuring: conflicts-configuring.html
+  evolution: evolution.html
+  features-hierarchy: features-hierarchy.html
+  graphs: graphs.html
+  limits-theory: limits-theory.html
+  patterns: patterns.html
+  reading-and-drawing: reading-and-drawing.html
+  teams-testing: teams-testing.html
+  variplex: variplex.html
+last_built: 2026-10-21T17:05Z
+urls:
+  reference: https://rheradio.github.io/variplex/reference
+  article: https://rheradio.github.io/variplex/articles

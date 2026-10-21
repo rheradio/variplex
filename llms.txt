@@ -1,0 +1,459 @@
+# variplex
+
+variplex computes, for a variability model, every relationship between
+two features that holds in all its valid configurations, and analyses
+the resulting graphs from R:
+
+- **requires**: every valid configuration with A also has B;
+- **excludes**: no valid configuration has both A and B;
+- **at least one**: no valid configuration lacks both.
+
+The model can be a feature model in
+[UVL](https://universal-variability-language.github.io/), or the Boolean
+formula (DIMACS) of a model written in any other notation, such as the
+Kconfig files of the Linux kernel translated by KMax, KConfigReader or
+KconfigSampler. A SAT solver finds the relationships once; then more
+than a hundred functions answer questions about them without a solver,
+and return tibbles: what each feature weighs, how the model is layered,
+where its conflicts come from, which features can go together, how much
+of the model a test sample covers, which patterns recur, and how the
+model changes from version to version.
+
+variplex brings together the engine of
+[Strong4VM](https://github.com/rheradio/strong4vm) (C++, compiled into
+the package with the SAT solver Glucose) and its R functions, which were
+named `sg_*` and are now `vp_*`.
+
+## Installation
+
+``` r
+
+install.packages("variplex")
+```
+
+Nothing has to be installed outside R. To draw the graphs, install also
+the suggested packages DiagrammeR (and DiagrammeRsvg and rsvg to save
+drawings as SVG, PDF or PNG). The development version is on GitHub:
+
+``` r
+
+# install.packages("pak")
+pak::pak("rheradio/variplex")
+```
+
+## Example
+
+``` r
+
+library(variplex)
+
+band <- vp_generate(vp_example("miband3_realized.uvl"), or_graph = TRUE)
+band
+#> variplex model "miband3_realized"
+#>   features: 11 variable (the nodes of the graphs), 8 core, 0 dead
+#>   requires: 21 arrows   excludes: 10 lines
+#>   at least one: 3 lines
+#>   atomic sets: 1 (of two or more features)
+
+vp_requirements(band, "TouchScreen") # what the touch screen brings along
+#> # A tibble: 3 x 1
+#>   feature       
+#>   <chr>         
+#> 1 Screen        
+#> 2 OLED          
+#> 3 CapacityButton
+# why two features never go together
+vp_explain_conflict(band, "MovementFilter", "BT40")
+#> # A tibble: 3 x 5
+#>   origin  step from           link     to    
+#>    <int> <int> <chr>          <chr>    <chr> 
+#> 1      1     1 MovementFilter requires BLEv40
+#> 2      1     2 BLEv40         requires Screen
+#> 3      1     3 Screen         excludes BT40
+vp_can_go_together(
+  band,
+  list(c("TouchScreen", "HeartRateSensor"), c("TouchScreen", "BT40"))
+)
+#> # A tibble: 2 x 3
+#>   wish                         possible reasons                                          
+#>   <chr>                        <lgl>    <chr>                                            
+#> 1 TouchScreen, HeartRateSensor TRUE     ""                                               
+#> 2 TouchScreen, BT40            FALSE    "TouchScreen (which brings Screen) excludes BT40"
+```
+
+``` r
+
+vp_plot(vp_minimal(band))                          # with DiagrammeR
+```
+
+## From the command line of Strong4VM to R
+
+| `strong4vm` | variplex |
+|:---|:---|
+| `strong4vm model.uvl -o out --or-graph --kernel` | `vp_generate("model.uvl", output_dir = "out", or_graph = TRUE, kernel = TRUE)` |
+| `strong4vm formula.dimacs --classify-only` | `vp_classify("formula.dimacs")` |
+| `strong4vm check out/model` | `vp_check(vp_read("out/model"))` |
+| `strong4vm expand out/model` | `vp_expand(vp_read("out/model", form = "minimal"))` |
+| `strong4vm explain out/model --conflict A B` | `vp_explain_conflict(model, "A", "B")` |
+| `strong4vm explain out/model --requires A B` | `vp_explain_requires(model, "A", "B")` |
+| `strong4vm diff old new` | `vp_compare(old, new)`, `vp_changed_links(old, new)`, `vp_state_moves(old, new)` |
+| `strong4vm diff --rename FILE old new` | `vp_compare(vp_rename(old, FILE), new)` |
+
+Every option of `strong4vm generate` is an argument of
+[`vp_generate()`](https://rheradio.github.io/variplex/reference/vp_generate.md);
+[`?vp_generate`](https://rheradio.github.io/variplex/reference/vp_generate.md)
+lists them.
+
+## Documentation
+
+Start with
+[`vignette("variplex")`](https://rheradio.github.io/variplex/articles/variplex.md).
+The other vignettes go through the results
+([`vignette("graphs")`](https://rheradio.github.io/variplex/articles/graphs.md))
+and every question the graphs answer, topic by topic;
+[`vp_functions()`](https://rheradio.github.io/variplex/reference/vp_functions.md)
+lists the functions by topic.
+
+## What the graphs cannot see
+
+The graphs hold relationships between **two** features. A rule that ties
+three or more features at once (“A requires B or C”) is in no graph,
+unless it implies a relationship between two of them. Everything the
+graphs say is true; a “yes” to a long wish list can still be wrong.
+[`vignette("limits-theory")`](https://rheradio.github.io/variplex/articles/limits-theory.md)
+explains it, measures it and proves it.
+
+## Citation
+
+`citation("variplex")`. The dataset of graphs of 5,709 variability
+models made with Strong4VM is at
+<https://doi.org/10.5281/zenodo.17277788>.
+
+# Package index
+
+## Computing and reading the graphs
+
+- [`vp_generate()`](https://rheradio.github.io/variplex/reference/vp_generate.md)
+  : Compute the strong dependency and conflict graphs of a variability
+  model
+- [`vp_classify()`](https://rheradio.github.io/variplex/reference/vp_classify.md)
+  : Classify the variables of a formula without computing any graph
+- [`vp_history()`](https://rheradio.github.io/variplex/reference/vp_history.md)
+  : Compute the graphs of every version of a model
+- [`vp_example()`](https://rheradio.github.io/variplex/reference/vp_example.md)
+  : The example models that come with the package
+- [`vp_functions()`](https://rheradio.github.io/variplex/reference/vp_functions.md)
+  : Every function of the package, by topic
+- [`vp_expand()`](https://rheradio.github.io/variplex/reference/vp_expand.md)
+  : The complete graphs rebuilt from the minimal form
+- [`vp_features()`](https://rheradio.github.io/variplex/reference/vp_features.md)
+  : The features and their status (variable, core, dead)
+- [`vp_igraph()`](https://rheradio.github.io/variplex/reference/vp_igraph.md)
+  : The igraph object of one graph
+- [`vp_links()`](https://rheradio.github.io/variplex/reference/vp_links.md)
+  : The links of one graph, as a tibble
+- [`vp_minimal()`](https://rheradio.github.io/variplex/reference/vp_minimal.md)
+  : The minimal form: what was written, roughly
+- [`vp_read()`](https://rheradio.github.io/variplex/reference/vp_read.md)
+  : Read the files of one run of Strong4VM
+- [`vp_read_history()`](https://rheradio.github.io/variplex/reference/vp_read_history.md)
+  : Read several runs: the versions of a model
+- [`vp_read_uvl_tree()`](https://rheradio.github.io/variplex/reference/vp_read_uvl_tree.md)
+  : The feature tree of a UVL model
+- [`vp_representativeness()`](https://rheradio.github.io/variplex/reference/vp_representativeness.md)
+  : The share of the configurations the graphs allow that are valid
+  (GANAK)
+- [`vp_subset()`](https://rheradio.github.io/variplex/reference/vp_subset.md)
+  : Focus on part of a model (exact: no solver needed)
+- [`print(`*`<vp_model>`*`)`](https://rheradio.github.io/variplex/reference/print.vp_model.md)
+  : Print a model
+
+## Measuring each feature
+
+- [`vp_atleastone_of()`](https://rheradio.github.io/variplex/reference/vp_atleastone_of.md)
+  : What leaving a feature out forces
+- [`vp_conflicts_of()`](https://rheradio.github.io/variplex/reference/vp_conflicts_of.md)
+  : What a feature excludes
+- [`vp_feature_table()`](https://rheradio.github.io/variplex/reference/vp_feature_table.md)
+  : Every measure of every feature, one row each
+- [`vp_genuine_hubs()`](https://rheradio.github.io/variplex/reference/vp_genuine_hubs.md)
+  : The most required features, and whether that is their own merit
+- [`vp_required_by()`](https://rheradio.github.io/variplex/reference/vp_required_by.md)
+  : What requires a feature (its impact set)
+- [`vp_requirements()`](https://rheradio.github.io/variplex/reference/vp_requirements.md)
+  : What a feature requires
+- [`vp_warning_zone()`](https://rheradio.github.io/variplex/reference/vp_warning_zone.md)
+  : Features both highly required and highly dependent
+
+## Layers and hierarchy
+
+- [`vp_atomic_sets()`](https://rheradio.github.io/variplex/reference/vp_atomic_sets.md)
+  : Features always selected together
+- [`vp_chains()`](https://rheradio.github.io/variplex/reference/vp_chains.md)
+  : The fewest chains that cover all features
+- [`vp_common_dependants()`](https://rheradio.github.io/variplex/reference/vp_common_dependants.md)
+  : What needs both of two features
+- [`vp_common_requirements()`](https://rheradio.github.io/variplex/reference/vp_common_requirements.md)
+  : What two features both need
+- [`vp_depth()`](https://rheradio.github.io/variplex/reference/vp_depth.md)
+  : The length of the longest chain of requirements
+- [`vp_downset()`](https://rheradio.github.io/variplex/reference/vp_downset.md)
+  : What depends on some features
+- [`vp_false_optional()`](https://rheradio.github.io/variplex/reference/vp_false_optional.md)
+  : Optional features that are not really optional
+- [`vp_feature_tree()`](https://rheradio.github.io/variplex/reference/vp_feature_tree.md)
+  : A feature tree rebuilt from the skeleton
+- [`vp_foundations()`](https://rheradio.github.io/variplex/reference/vp_foundations.md)
+  : Features that need nothing
+- [`vp_implied_requires()`](https://rheradio.github.io/variplex/reference/vp_implied_requires.md)
+  : The arrows that follow from others, and through what
+- [`vp_largest_free_set()`](https://rheradio.github.io/variplex/reference/vp_largest_free_set.md)
+  : The most features that are pairwise free (all three graphs)
+- [`vp_largest_unrelated_set()`](https://rheradio.github.io/variplex/reference/vp_largest_unrelated_set.md)
+  : One such set
+- [`vp_leaves()`](https://rheradio.github.io/variplex/reference/vp_leaves.md)
+  : Features that nothing needs
+- [`vp_levels()`](https://rheradio.github.io/variplex/reference/vp_levels.md)
+  : The layer of each feature
+- [`vp_longest_chain()`](https://rheradio.github.io/variplex/reference/vp_longest_chain.md)
+  : One longest chain
+- [`vp_longest_decision_chain()`](https://rheradio.github.io/variplex/reference/vp_longest_decision_chain.md)
+  : The longest chain of forced decisions (all three graphs)
+- [`vp_redundant_candidates()`](https://rheradio.github.io/variplex/reference/vp_redundant_candidates.md)
+  : Written requirements that follow from others
+- [`vp_skeleton()`](https://rheradio.github.io/variplex/reference/vp_skeleton.md)
+  : The arrows that do not follow from others
+- [`vp_tree_agreement()`](https://rheradio.github.io/variplex/reference/vp_tree_agreement.md)
+  : Does the declared tree hide layers of requirements?
+- [`vp_upset()`](https://rheradio.github.io/variplex/reference/vp_upset.md)
+  : What some features bring along
+- [`vp_width()`](https://rheradio.github.io/variplex/reference/vp_width.md)
+  : The largest number of features none of which requires another
+
+## The whole model
+
+- [`vp_check()`](https://rheradio.github.io/variplex/reference/vp_check.md)
+  : Are the files consistent?
+- [`vp_degree_distribution()`](https://rheradio.github.io/variplex/reference/vp_degree_distribution.md)
+  : How many features have each degree
+- [`vp_gini()`](https://rheradio.github.io/variplex/reference/vp_gini.md)
+  : How unevenly a quantity is spread
+- [`vp_summary()`](https://rheradio.github.io/variplex/reference/vp_summary.md)
+  : One row of numbers per model
+
+## Conflicts
+
+- [`vp_alternative_groups()`](https://rheradio.github.io/variplex/reference/vp_alternative_groups.md)
+  : Groups of any features that all exclude each other (at most one per
+  product)
+- [`vp_candidate_groups()`](https://rheradio.github.io/variplex/reference/vp_candidate_groups.md)
+  : Mutually exclusive children of one parent: the alternative groups a
+  feature model would declare
+- [`vp_colouring()`](https://rheradio.github.io/variplex/reference/vp_colouring.md)
+  : The features split into groups without conflicts
+- [`vp_conflict_cover()`](https://rheradio.github.io/variplex/reference/vp_conflict_cover.md)
+  : The fewest 'at most one of' groups that state every conflict
+- [`vp_explain_conflict()`](https://rheradio.github.io/variplex/reference/vp_explain_conflict.md)
+  : Why two features exclude each other
+- [`vp_explain_requires()`](https://rheradio.github.io/variplex/reference/vp_explain_requires.md)
+  : Why one feature requires another
+- [`vp_largest_compatible_set()`](https://rheradio.github.io/variplex/reference/vp_largest_compatible_set.md)
+  : The most features without a conflict among them
+- [`vp_opposites()`](https://rheradio.github.io/variplex/reference/vp_opposites.md)
+  : Pairs of which every product has exactly one
+- [`vp_primitive_atleastone()`](https://rheradio.github.io/variplex/reference/vp_primitive_atleastone.md)
+  : The at-least-one lines from which all others follow
+- [`vp_primitive_conflicts()`](https://rheradio.github.io/variplex/reference/vp_primitive_conflicts.md)
+  : The conflicts from which all others follow
+- [`vp_requires_from_conflicts()`](https://rheradio.github.io/variplex/reference/vp_requires_from_conflicts.md)
+  : Requirements explained by a conflict and an at-least-one line
+- [`vp_twins()`](https://rheradio.github.io/variplex/reference/vp_twins.md)
+  : Features that behave identically
+
+## Configuration and teams
+
+- [`vp_can_go_together()`](https://rheradio.github.io/variplex/reference/vp_can_go_together.md)
+  : Can these features be in one product? (a wish list)
+- [`vp_consequences()`](https://rheradio.github.io/variplex/reference/vp_consequences.md)
+  : What some decisions force
+- [`vp_count_graph_products()`](https://rheradio.github.io/variplex/reference/vp_count_graph_products.md)
+  : How many products the graphs allow (small models)
+- [`vp_kernel()`](https://rheradio.github.io/variplex/reference/vp_kernel.md)
+  : The kernel: a small map for 'can these go together?'
+- [`vp_kernel_links()`](https://rheradio.github.io/variplex/reference/vp_kernel_links.md)
+  : The arrows and red lines of the kernel
+- [`vp_mig()`](https://rheradio.github.io/variplex/reference/vp_mig.md)
+  : The modal implication graph: every implication between two decisions
+- [`vp_most_decisive()`](https://rheradio.github.io/variplex/reference/vp_most_decisive.md)
+  : The features whose selection decides the most
+- [`vp_pair()`](https://rheradio.github.io/variplex/reference/vp_pair.md)
+  : The four combinations of two features: which are possible
+- [`vp_partial_configuration()`](https://rheradio.github.io/variplex/reference/vp_partial_configuration.md)
+  : Is this mix of selected and left-out features possible?
+- [`vp_rounds()`](https://rheradio.github.io/variplex/reference/vp_rounds.md)
+  : A safe order for asking about features, in rounds
+- [`vp_split_after()`](https://rheradio.github.io/variplex/reference/vp_split_after.md)
+  : The independent parts of what is left after some decisions
+- [`vp_splitting_decisions()`](https://rheradio.github.io/variplex/reference/vp_splitting_decisions.md)
+  : Single decisions that split the model most, taken before the teams
+  start
+- [`vp_team_links()`](https://rheradio.github.io/variplex/reference/vp_team_links.md)
+  : The links between features of different teams: where teams interfere
+- [`vp_team_moves()`](https://rheradio.github.io/variplex/reference/vp_team_moves.md)
+  : Features with more links to another team than to their own
+- [`vp_team_order()`](https://rheradio.github.io/variplex/reference/vp_team_order.md)
+  : In which order teams decide, which decide together, which must agree
+- [`vp_teams()`](https://rheradio.github.io/variplex/reference/vp_teams.md)
+  : How independent each team is: links inside and outside, features it
+  decides alone
+
+## Testing
+
+- [`vp_combinations_to_cover()`](https://rheradio.github.io/variplex/reference/vp_combinations_to_cover.md)
+  : How many combinations a t-wise sample must cover
+- [`vp_coverage()`](https://rheradio.github.io/variplex/reference/vp_coverage.md)
+  : How much of them a sample covers
+- [`vp_min_sample_size()`](https://rheradio.github.io/variplex/reference/vp_min_sample_size.md)
+  : A lower bound on the size of any covering sample
+- [`vp_pick_sample()`](https://rheradio.github.io/variplex/reference/vp_pick_sample.md)
+  : A small covering sample chosen from given configurations
+- [`vp_sample_violations()`](https://rheradio.github.io/variplex/reference/vp_sample_violations.md)
+  : Configurations of a sample that break a link
+- [`vp_uncovered()`](https://rheradio.github.io/variplex/reference/vp_uncovered.md)
+  : Which combinations a sample misses
+
+## Patterns and statistics
+
+- [`vp_baseline()`](https://rheradio.github.io/variplex/reference/vp_baseline.md)
+  : What a random model of the same shape would give
+- [`vp_communities()`](https://rheradio.github.io/variplex/reference/vp_communities.md)
+  : Groups of closely linked features
+- [`vp_compare_groupings()`](https://rheradio.github.io/variplex/reference/vp_compare_groupings.md)
+  : How alike two groupings are
+- [`vp_coreness()`](https://rheradio.github.io/variplex/reference/vp_coreness.md)
+  : How deep in the conflicts each feature sits
+- [`vp_cut_features()`](https://rheradio.github.io/variplex/reference/vp_cut_features.md)
+  : Single features that hold two parts together
+- [`vp_feature_groups()`](https://rheradio.github.io/variplex/reference/vp_feature_groups.md)
+  : Features grouped by their measures
+- [`vp_independent_parts()`](https://rheradio.github.io/variplex/reference/vp_independent_parts.md)
+  : Parts of the model that no relationship ties together
+- [`vp_odd_ones()`](https://rheradio.github.io/variplex/reference/vp_odd_ones.md)
+  : Alike in conflicts, different in requirements
+- [`vp_power_law()`](https://rheradio.github.io/variplex/reference/vp_power_law.md)
+  : Does a degree distribution follow a power law?
+- [`vp_robustness()`](https://rheradio.github.io/variplex/reference/vp_robustness.md)
+  : How the skeleton falls apart when hubs are removed
+- [`vp_similar_features()`](https://rheradio.github.io/variplex/reference/vp_similar_features.md)
+  : Features most alike in one graph
+- [`vp_triangle_significance()`](https://rheradio.github.io/variplex/reference/vp_triangle_significance.md)
+  : Which kinds of triangle occur more, or less, often than by chance
+- [`vp_triangles()`](https://rheradio.github.io/variplex/reference/vp_triangles.md)
+  : The four kinds of triangle
+
+## Evolution
+
+- [`vp_attachment()`](https://rheradio.github.io/variplex/reference/vp_attachment.md)
+  : Where new features attach
+- [`vp_auc()`](https://rheradio.github.io/variplex/reference/vp_auc.md)
+  : How good a ranking is (area under the curve)
+- [`vp_changed_links()`](https://rheradio.github.io/variplex/reference/vp_changed_links.md)
+  : The links gained and lost
+- [`vp_co_change()`](https://rheradio.github.io/variplex/reference/vp_co_change.md)
+  : Features whose links change in the same steps
+- [`vp_community_history()`](https://rheradio.github.io/variplex/reference/vp_community_history.md)
+  : Do communities stay the same?
+- [`vp_compare()`](https://rheradio.github.io/variplex/reference/vp_compare.md)
+  : What changed between two versions
+- [`vp_disruptions()`](https://rheradio.github.io/variplex/reference/vp_disruptions.md)
+  : Steps that changed far more than usual
+- [`vp_edit_type()`](https://rheradio.github.io/variplex/reference/vp_edit_type.md)
+  : Did a step restrict the model, relax it, or both?
+- [`vp_eras()`](https://rheradio.github.io/variplex/reference/vp_eras.md)
+  : The history split into runs of alike versions
+- [`vp_feature_churn()`](https://rheradio.github.io/variplex/reference/vp_feature_churn.md)
+  : The features that changed most over a history (hotspots)
+- [`vp_feature_states()`](https://rheradio.github.io/variplex/reference/vp_feature_states.md)
+  : The state of every feature in every version
+- [`vp_flip_flops()`](https://rheradio.github.io/variplex/reference/vp_flip_flops.md)
+  : Features that change state back and forth
+- [`vp_forecast_size()`](https://rheradio.github.io/variplex/reference/vp_forecast_size.md)
+  : Forecast the size of later versions
+- [`vp_growth()`](https://rheradio.github.io/variplex/reference/vp_growth.md)
+  : How fast links grow with features
+- [`vp_history_apply()`](https://rheradio.github.io/variplex/reference/vp_history_apply.md)
+  : Any measure, version by version
+- [`vp_history_changes()`](https://rheradio.github.io/variplex/reference/vp_history_changes.md)
+  : What changed at every step
+- [`vp_history_sizes()`](https://rheradio.github.io/variplex/reference/vp_history_sizes.md)
+  : The size of every version
+- [`vp_hub_stability()`](https://rheradio.github.io/variplex/reference/vp_hub_stability.md)
+  : Are the hubs the same from version to version?
+- [`vp_interaction_changes()`](https://rheradio.github.io/variplex/reference/vp_interaction_changes.md)
+  : Combinations of two features a step made possible or impossible (and
+  the tests they touch)
+- [`vp_life_cycle()`](https://rheradio.github.io/variplex/reference/vp_life_cycle.md)
+  : How features move between variable, core, dead, absent
+- [`vp_link_lifetime()`](https://rheradio.github.io/variplex/reference/vp_link_lifetime.md)
+  : How long new links last
+- [`vp_prediction_table()`](https://rheradio.github.io/variplex/reference/vp_prediction_table.md)
+  : One row per feature and version, for predictions
+- [`vp_rename()`](https://rheradio.github.io/variplex/reference/vp_rename.md)
+  : Rename features of a model
+- [`vp_rename_candidates()`](https://rheradio.github.io/variplex/reference/vp_rename_candidates.md)
+  : Features that were probably renamed
+- [`vp_ripple()`](https://rheradio.github.io/variplex/reference/vp_ripple.md)
+  : How many consequences each written change had
+- [`vp_state_moves()`](https://rheradio.github.io/variplex/reference/vp_state_moves.md)
+  : Features that appeared, disappeared or changed status
+- [`vp_top_movers()`](https://rheradio.github.io/variplex/reference/vp_top_movers.md)
+  : The features whose links changed most
+- [`vp_version_distance()`](https://rheradio.github.io/variplex/reference/vp_version_distance.md)
+  : How far apart every two versions are
+
+## Drawing
+
+- [`vp_dot()`](https://rheradio.github.io/variplex/reference/vp_dot.md)
+  : The Graphviz (DOT) source of a drawing
+- [`vp_dot_compare()`](https://rheradio.github.io/variplex/reference/vp_dot_compare.md)
+  : The Graphviz (DOT) source of a drawing of what changed
+- [`vp_plot()`](https://rheradio.github.io/variplex/reference/vp_plot.md)
+  : Draw a model, some links or a feature tree
+- [`vp_plot_compare()`](https://rheradio.github.io/variplex/reference/vp_plot_compare.md)
+  : Draw what changed between two versions
+
+## The package
+
+- [`variplex`](https://rheradio.github.io/variplex/reference/variplex-package.md)
+  [`variplex-package`](https://rheradio.github.io/variplex/reference/variplex-package.md)
+  : variplex: strong dependency and conflict graphs of variability
+  models
+
+# Articles
+
+### Getting started
+
+- [Get started with
+  variplex](https://rheradio.github.io/variplex/articles/variplex.md):
+- [The graphs and the
+  files](https://rheradio.github.io/variplex/articles/graphs.md):
+- [Reading and drawing the
+  results](https://rheradio.github.io/variplex/articles/reading-and-drawing.md):
+
+### Questions the graphs answer
+
+- [Features, hierarchy and the whole
+  model](https://rheradio.github.io/variplex/articles/features-hierarchy.md):
+- [Conflicts and
+  configuration](https://rheradio.github.io/variplex/articles/conflicts-configuring.md):
+- [Teams and
+  testing](https://rheradio.github.io/variplex/articles/teams-testing.md):
+- [Patterns and
+  statistics](https://rheradio.github.io/variplex/articles/patterns.md):
+- [Following a model through
+  time](https://rheradio.github.io/variplex/articles/evolution.md):
+
+### Limits and theory
+
+- [Limits and
+  theory](https://rheradio.github.io/variplex/articles/limits-theory.md):

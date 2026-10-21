@@ -1,0 +1,10 @@
+/* Boxes of the vignettes of variplex */
+.vp-box { border: 1px solid #c8d1e0; border-radius: 4px; padding: 0.6em 1em; margin: 1em 0; background: #f2f5fa; }
+.vp-box > p:first-child { margin-top: 0.3em; }
+.vp-limitsbox { border-color: #b3261e; background: #fbeeed; }
+.vp-limitsbox > p:first-child strong { color: #b3261e; }
+.vp-plainwords { border-color: #1b7f3b; background: #edf7f0; }
+.vp-careful { border-color: #b3261e; background: #fbeeed; }
+.vp-tryit { border-color: #c25e00; background: #fff6e6; }
+.vp-inside { background: #ffffff; }
+img { max-width: 100%; height: auto; }
