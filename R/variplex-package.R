@@ -1,4 +1,4 @@
-#' variplex: strong dependency and conflict graphs of variability models
+#' variplex: analysis of strong dependency and conflict graphs of variability models
 #'
 #' variplex computes, for a variability model, every relationship between two
 #' features that holds in all its valid configurations, and analyses the

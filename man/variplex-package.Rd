@@ -4,7 +4,7 @@
 \name{variplex-package}
 \alias{variplex}
 \alias{variplex-package}
-\title{variplex: strong dependency and conflict graphs of variability models}
+\title{variplex: analysis of strong dependency and conflict graphs of variability models}
 \description{
 variplex computes, for a variability model, every relationship between two
 features that holds in all its valid configurations, and analyses the
@@ -37,6 +37,7 @@ ANTLR 4 parser runtime, is compiled into the package.
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://rheradio.github.io/variplex/}
   \item \url{https://github.com/rheradio/variplex}
   \item \url{https://github.com/rheradio/strong4vm}
   \item Report bugs at \url{https://github.com/rheradio/variplex/issues}

@@ -1,6 +1,6 @@
 Package: variplex
 Type: Package
-Title: Strong Dependency and Conflict Graphs of Variability Models
+Title: Analysis of Strong Dependency and Conflict Graphs of Variability Models
 Version: 0.1.0
 Authors@R: c(
     person("Rubén", "Heradio", email = "rheradio@issi.uned.es", role = c("aut", "cre", "cph"),
