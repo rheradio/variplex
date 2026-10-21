@@ -295,5 +295,5 @@
 
 - [`variplex`](https://rheradio.github.io/variplex/reference/variplex-package.md)
   [`variplex-package`](https://rheradio.github.io/variplex/reference/variplex-package.md)
-  : variplex: strong dependency and conflict graphs of variability
-  models
+  : variplex: analysis of strong dependency and conflict graphs of
+  variability models

@@ -47,12 +47,12 @@
 Source:
 [`inst/CITATION`](https://github.com/rheradio/variplex/blob/main/inst/CITATION)
 
-Heradio R (2026). *variplex: Strong Dependency and Conflict Graphs of
-Variability Models*. R package version 0.1.0,
+Heradio R (2026). *variplex: Analysis of Strong Dependency and Conflict
+Graphs of Variability Models*. R package version 0.1.0,
 <https://github.com/rheradio/variplex>.
 
     @Manual{,
-      title = {{variplex}: Strong Dependency and Conflict Graphs of Variability Models},
+      title = {{variplex}: Analysis of Strong Dependency and Conflict Graphs of Variability Models},
       author = {Rubén Heradio},
       year = {2026},
       note = {R package version 0.1.0},
