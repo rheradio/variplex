@@ -1,0 +1,70 @@
+url: https://rheradio.github.io/variplex/
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github]
+
+articles:
+- title: Getting started
+  navbar: ~
+  contents:
+  - variplex
+  - graphs
+  - reading-and-drawing
+- title: Questions the graphs answer
+  navbar: Questions the graphs answer
+  contents:
+  - features-hierarchy
+  - conflicts-configuring
+  - teams-testing
+  - patterns
+  - evolution
+- title: Limits and theory
+  navbar: Limits and theory
+  contents:
+  - limits-theory
+
+reference:
+- title: Computing and reading the graphs
+  contents:
+  - vp_generate
+  - vp_classify
+  - vp_history
+  - vp_example
+  - vp_functions
+  - has_concept("reading")
+  - starts_with("vp_read")
+  - print.vp_model
+- title: Measuring each feature
+  contents:
+  - has_concept("features")
+- title: Layers and hierarchy
+  contents:
+  - has_concept("hierarchy")
+- title: The whole model
+  contents:
+  - has_concept("whole model")
+- title: Conflicts
+  contents:
+  - has_concept("conflicts")
+- title: Configuration and teams
+  contents:
+  - has_concept("configuration")
+- title: Testing
+  contents:
+  - has_concept("testing")
+- title: Patterns and statistics
+  contents:
+  - has_concept("patterns")
+- title: Evolution
+  contents:
+  - has_concept("evolution")
+- title: Drawing
+  contents:
+  - has_concept("drawing")
+- title: The package
+  contents:
+  - variplex-package

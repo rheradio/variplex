@@ -1,0 +1,12 @@
+features
+	PowerBand {abstract true}
+		optional
+			Screen {power 40}
+				optional
+					AlwaysOnDisplay {power 25}
+					Projector {power 45}
+			GPS {power 30}
+			NFC {power 10}
+
+constraints
+	sum(power) < 80

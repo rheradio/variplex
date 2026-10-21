@@ -1,0 +1,23 @@
+*Vertices 11
+1 "Screen"
+2 "TouchScreen"
+3 "OLED"
+4 "CapacityButton"
+5 "ContactlessPayment"
+6 "MovementFilter"
+7 "HeartRateSensor"
+8 "BLEv40"
+9 "BLEv42"
+10 "BT40"
+11 "NFC"
+*Edges
+1 10
+2 10
+3 10
+4 10
+6 7
+6 9
+6 10
+8 9
+8 10
+9 10

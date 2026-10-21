@@ -1,0 +1,15 @@
+# The engine of Strong4VM (src/s4, src/antlr4: copied by tools/sync_cpp.R) and its R interface.
+CXX_STD = CXX17
+
+BD = s4/uvl2dimacs/backbone_solver/src
+PKG_CPPFLAGS = -I. -Is4/api/include -Is4/dimacs2graphs/api -Is4/uvl2dimacs/api/include \
+  -Is4/uvl2dimacs/generator/include -Is4/uvl2dimacs/parser/include -Iantlr4 \
+  -I$(BD) -I$(BD)/api -I$(BD)/detectors -I$(BD)/data_structures -I$(BD)/io -I$(BD)/sat_interface \
+  -I$(BD)/sat_solvers/minisat_2_2_0 -I$(BD)/sat_solvers/glucose_3_0 \
+  -DNDEBUG -DANTLR4CPP_STATIC -DEXPERT -DINCREMENTAL -DGlucose=Glucose_3_0 \
+  -D__STDC_LIMIT_MACROS -D__STDC_FORMAT_MACROS
+PKG_LIBS = -lz
+
+@ENGINE_OBJECTS@
+
+OBJECTS = RcppExports.o rcpp_generate.o vp_io.o $(ENGINE_OBJECTS)

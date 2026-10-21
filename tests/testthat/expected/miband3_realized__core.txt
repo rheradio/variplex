@@ -1,0 +1,8 @@
+0 "FitnessMonitor"
+0 "SleepTracker"
+0 "VibrateAlert"
+0 "Call"
+0 "Notification"
+0 "Pedometer"
+0 "Accelerometer"
+0 "Bluetooth"

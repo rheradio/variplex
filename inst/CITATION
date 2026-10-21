@@ -1,0 +1,8 @@
+bibentry(
+  bibtype = "Manual",
+  title = "{variplex}: Strong Dependency and Conflict Graphs of Variability Models",
+  author = person("Rubén", "Heradio", comment = c(ORCID = "0000-0002-7131-0482")),
+  year = "2026",
+  note = paste("R package version", meta$Version),
+  url = "https://github.com/rheradio/variplex"
+)

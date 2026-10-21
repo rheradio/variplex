@@ -1,0 +1,10 @@
+imports
+	sensors.Pack as S
+
+features
+	Band {abstract true}
+		optional
+			GPS
+
+constraints
+	GPS => S.Compass

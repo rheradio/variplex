@@ -1,0 +1,52 @@
+P-SoftwareX	R. Heradio, L. Cambelo, M. A. Olivero, J. M. Sanchez, A. P. Garcia-Plaza. Strong4VM: From Variability Models to Strong Transitive Dependency and Conflict Graphs. Manuscript (`papers/software_x`). Now published and indexed in Scopus: *SoftwareX* 34, 102663, 2026.
+P-SciData	R. Heradio, L. Cambelo, M. A. Olivero, J. M. Sanchez, D. Fernandez-Amoros. A dataset of strong dependency and conflict graphs generated from Boolean formulas encoding the variability of highly configurable software systems. Data Descriptor manuscript (`papers/scientific_data_graphs`); dataset: Zenodo, <https://doi.org/10.5281/zenodo.18260602>.
+Pett21	T. Pett, S. Krieter, T. Runge, T. Thüm, M. Lochau, I. Schaefer. Stability of product-line sampling in continuous integration. In *VaMoS*, 2021. doi:10.1145/3442391.3442410.
+Abate09	P. Abate, J. Boender, R. Di Cosmo, S. Zacchiroli. Strong dependencies between software components. In *ESEM*, 2009. Extended version: arXiv:0905.4226.
+MannRock11	S. Mann, G. Rock. Control variant-rich models by variability measures. In *VaMoS*, pp. 29--38, 2011.
+Heradio14	R. Heradio, D. Fernandez-Amoros, H. Perez-Morago, A. Adan. Speeding up derivative configuration from product platforms. *Entropy* 16(6):3329--3356, 2014. doi:10.3390/e16063329.
+P-Variability	J. M. Sanchez, M. A. Olivero, R. Heradio, L. Cambelo, D. Fernandez-Amoros. Reasoning About Variability Models Through Network Analysis. Manuscript (`papers/variability`); arXiv:2603.16577, 2026.
+Davey02	B. A. Davey, H. A. Priestley. *Introduction to Lattices and Order*, 2nd ed. Cambridge University Press, 2002.
+Aho72	A. V. Aho, M. R. Garey, J. D. Ullman. The transitive reduction of a directed graph. *SIAM Journal on Computing* 1(2):131--137, 1972.
+Mirsky71	L. Mirsky. A dual of Dilworth's decomposition theorem. *American Mathematical Monthly* 78(8):876--877, 1971.
+Dilworth50	R. P. Dilworth. A decomposition theorem for partially ordered sets. *Annals of Mathematics* 51(1):161--166, 1950.
+Benavides10	D. Benavides, S. Segura, A. Ruiz-Cortés. Automated analysis of feature models 20 years later: A literature review. *Information Systems* 35(6):615--636, 2010.
+Hess25	T. Heß, A. Molt. Improving deterministic BDD compilation with counting-free computation of atomic sets. In *SPLC*, 2025. doi:10.1145/3748269.3748491.
+Czarnecki07	K. Czarnecki, A. Wąsowski. Feature diagrams and logics: There and back again. In *SPLC*, pp. 23--34, 2007.
+She11	S. She, R. Lotufo, T. Berger, A. Wąsowski, K. Czarnecki. Reverse engineering feature models. In *ICSE*, pp. 461--470, 2011.
+Andersen12	N. Andersen, K. Czarnecki, S. She, A. Wąsowski. Efficient synthesis of feature models. In *SPLC*, pp. 106--115, 2012. doi:10.1145/2362536.2362553.
+Thuem09	T. Thüm, D. Batory, C. Kästner. Reasoning about edits to feature models. In *ICSE*, pp. 254--264, 2009.
+Nieke18	M. Nieke, J. Mauro, C. Seidl, T. Thüm, I. C. Yu, F. Franzke. Anomaly analyses for feature-model evolution. In *GPCE*, pp. 188--201, 2018.
+Berger14	T. Berger, J. Guo. Towards system analysis with variability model metrics. In *VaMoS*, 2014.
+MacCormack06	A. MacCormack, J. Rusnak, C. Y. Baldwin. Exploring the structure of complex software designs: An empirical study of open source and proprietary code. *Management Science* 52(7):1015--1030, 2006.
+Baldwin14	C. Baldwin, A. MacCormack, J. Rusnak. Hidden structure: Using network methods to map system architecture. *Research Policy* 43(8):1381--1397, 2014.
+Czarnecki05	K. Czarnecki, S. Helsen, U. Eisenecker. Staged configuration through specialization and multilevel configuration of feature models. *Software Process: Improvement and Practice* 10(2):143--169, 2005.
+Krieter18	S. Krieter, T. Thüm, S. Schulze, R. Schröter, G. Saake. Propagating configuration decisions with modal implication graphs. In *ICSE*, 2018. doi:10.1145/3180155.3180159.
+Johansen12	M. F. Johansen, Ø. Haugen, F. Fleurey. An algorithm for generating $t$-wise covering arrays from large feature models. In *SPLC*, 2012.
+Krupke25	D. Krupke, A. Moradi, M. Perk, P. Keldenich, G. Gehrke, S. Krieter, T. Thüm, S. P. Fekete. How low can we go? Minimizing interaction samples for configurable systems. arXiv:2501.06788, 2025.
+Milo02	R. Milo, S. Shen-Orr, S. Itzkovitz, N. Kashtan, D. Chklovskii, U. Alon. Network motifs: Simple building blocks of complex networks. *Science* 298:824--827, 2002.
+Blondel08	V. D. Blondel, J.-L. Guillaume, R. Lambiotte, E. Lefebvre. Fast unfolding of communities in large networks. *Journal of Statistical Mechanics*, P10008, 2008.
+Albert00	R. Albert, H. Jeong, A.-L. Barabási. Error and attack tolerance of complex networks. *Nature* 406:378--382, 2000.
+Seidman83	S. B. Seidman. Network structure and minimum degree. *Social Networks* 5(3):269--287, 1983.
+Clauset09	A. Clauset, C. R. Shalizi, M. E. J. Newman. Power-law distributions in empirical data. *SIAM Review* 51(4):661--703, 2009.
+Broido19	A. D. Broido, A. Clauset. Scale-free networks are rare. *Nature Communications* 10:1017, 2019.
+LibenNowell07	D. Liben-Nowell, J. Kleinberg. The link-prediction problem for social networks. *Journal of the American Society for Information Science and Technology* 58(7):1019--1031, 2007.
+Leskovec05	J. Leskovec, J. Kleinberg, C. Faloutsos. Graphs over time: Densification laws, shrinking diameters and possible explanations. In *KDD*, pp. 177--187, 2005.
+Peel15	L. Peel, A. Clauset. Detecting change points in the large-scale structure of evolving networks. In *AAAI*, 2015. doi:10.1609/aaai.v29i1.9574.
+Akoglu15	L. Akoglu, H. Tong, D. Koutra. Graph based anomaly detection and description: A survey. *Data Mining and Knowledge Discovery* 29(3):626--688, 2015.
+Barabasi99	A.-L. Barabási, R. Albert. Emergence of scaling in random networks. *Science* 286:509--512, 1999.
+DiCosmo10	R. Di Cosmo, J. Boender. Using strong conflicts to detect quality issues in component-based complex systems. In *ISEC*, pp. 163--172, 2010.
+Mendonca09	M. Mendonça, A. Wąsowski, K. Czarnecki. SAT-based analysis of feature models is easy. In *SPLC*, 2009.
+Liang15	J. H. Liang, V. Ganesh, K. Czarnecki, V. Raman. SAT-based analysis of large real-world feature models is easy. In *SPLC*, 2015.
+Kuiter25	E. Kuiter, C. Sundermann, T. Thüm, T. Heß, S. Krieter, G. Saake. How configurable is the Linux kernel? Analyzing two decades of feature-model history. *ACM TOSEM* 35(1), 2026. doi:10.1145/3729423.
+Thuem11	T. Thüm, C. Kästner, S. Erdweg, N. Siegmund. Abstract features in feature modeling. In *SPLC*, pp. 191--200, 2011. doi:10.1109/SPLC.2011.53.
+Trinidad08	P. Trinidad, D. Benavides, A. Durán, A. Ruiz-Cortés, M. Toro. Automated error analysis for the agilization of feature modeling. *Journal of Systems and Software* 81(6):883--896, 2008.
+Vouillon13	J. Vouillon, R. Di Cosmo. On software component co-installability. *ACM TOSEM* 22(4), 2013. doi:10.1145/2522920.2522927.
+Kowal16	M. Kowal, S. Ananieva, T. Thüm. Explaining anomalies in feature models. In *GPCE*, 2016.
+Ananieva16	S. Ananieva, M. Kowal, T. Thüm, I. Schaefer. Implicit constraints in partial feature models. In *FOSD*, pp. 18--27, 2016.
+Duszynski19	S. Duszynski, S. J. Dhar, T. Beichter. Using relation graphs for improved understanding of feature models in software product lines. In *SPLC*, vol. A, 2019.
+Acher12	M. Acher, P. Heymans, P. Collet, C. Quinton, P. Lahire, P. Merle. Feature model differences. In *CAiSE*, LNCS 7328, 2012.
+Lotufo10	R. Lotufo, S. She, T. Berger, K. Czarnecki, A. Wąsowski. Evolution of the Linux kernel variability model. In *SPLC*, LNCS 6287, pp. 136--150, 2010.
+Kuiter22	E. Kuiter, S. Krieter, C. Sundermann, T. Thüm, G. Saake. Tseitin or not Tseitin? The impact of CNF transformations on feature-model analyses. In *ASE*, 2022.
+Sundermann21	C. Sundermann, M. Nieke, P. M. Bittner, T. Heß, T. Thüm, I. Schaefer. Applications of #SAT solvers on feature models. In *VaMoS*, 2021. doi:10.1145/3442391.3442404.
+Selman96	B. Selman, H. Kautz. Knowledge compilation and theory approximation. *Journal of the ACM* 43(2):193--224, 1996.
+Aspvall79	B. Aspvall, M. F. Plass, R. E. Tarjan. A linear-time algorithm for testing the truth of certain quantified Boolean formulas. *Information Processing Letters* 8(3):121--123, 1979. doi:10.1016/0020-0190(79)90002-4.

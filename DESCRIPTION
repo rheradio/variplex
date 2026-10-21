@@ -1,0 +1,72 @@
+Package: variplex
+Type: Package
+Title: Strong Dependency and Conflict Graphs of Variability Models
+Version: 0.1.0
+Authors@R: c(
+    person("Rubén", "Heradio", email = "rheradio@issi.uned.es", role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0000-0002-7131-0482", "first author of Strong4VM and BoneDigger")),
+    person("Luis", "Cambelo", role = c("ctb", "cph"), comment = "Strong4VM and BoneDigger"),
+    person(c("Miguel", "A."), "Olivero", role = c("ctb", "cph"), comment = "Strong4VM"),
+    person(c("José", "Manuel"), "Sánchez Ruíz", role = c("ctb", "cph"), comment = "Strong4VM"),
+    person("Alberto", "Pérez García-Plaza", role = c("ctb", "cph"), comment = "Strong4VM"),
+    person("David", "Fernández Amorós", role = c("ctb", "cph"), comment = "Strong4VM"),
+    person("Gilles", "Audemard", role = c("ctb", "cph"), comment = "Glucose SAT solver"),
+    person("Laurent", "Simon", role = c("ctb", "cph"), comment = "Glucose SAT solver"),
+    person("Niklas", "Eén", role = c("ctb", "cph"), comment = "MiniSat, on which Glucose is based"),
+    person("Niklas", "Sörensson", role = c("ctb", "cph"), comment = "MiniSat, on which Glucose is based"),
+    person("Dictino", "Chaos", role = c("ctb", "cph"), comment = "BoneDigger backbone solver"),
+    person("Terence", "Parr", role = c("ctb"), comment = "ANTLR 4 C++ runtime"),
+    person("The ANTLR Project", role = "cph", comment = "ANTLR 4 C++ runtime")
+  )
+Description: Computes and analyses the strong binary relationships of a
+    variability model (a feature model, or the configuration space of a
+    system such as the Linux kernel): which features require others,
+    which exclude each other and of which pairs at least one must be
+    selected, in every valid configuration. Models are read in the
+    Universal Variability Language ('UVL') or as Boolean formulas in
+    'DIMACS' format, such as those that 'KMax', 'KConfigReader',
+    'KconfigSampler' or 'TraVarT' produce from other notations. A
+    satisfiability solver ('Glucose') finds the relationships; the
+    resulting graphs are written as 'Pajek' files and analysed with more
+    than one hundred functions that return tibbles: atomic sets,
+    hierarchy, conflicts, configuration and team planning, combinatorial
+    testing, network patterns and the evolution of a model through its
+    versions. Rules that involve three or more features at once are not
+    represented in the graphs. A companion data set of graphs for 5,709
+    models is available at <doi:10.5281/zenodo.17277788>.
+License: MIT + file LICENSE
+URL: https://github.com/rheradio/variplex, https://github.com/rheradio/strong4vm
+BugReports: https://github.com/rheradio/variplex/issues
+Depends:
+    R (>= 4.1.0)
+Imports:
+    dplyr,
+    igraph,
+    jsonlite,
+    Matrix,
+    methods,
+    Rcpp,
+    stats,
+    tibble,
+    tools,
+    utils
+Suggests:
+    DiagrammeR,
+    DiagrammeRsvg,
+    ggplot2,
+    knitr,
+    rmarkdown,
+    rsvg,
+    spelling,
+    testthat (>= 3.0.0),
+    withr
+LinkingTo:
+    Rcpp
+SystemRequirements: C++17, GANAK (optional, for vp_generate(representativeness = TRUE))
+VignetteBuilder: knitr
+Config/Needs/website: pkgdown
+Config/testthat/edition: 3
+Encoding: UTF-8
+Language: en-GB
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.1.1

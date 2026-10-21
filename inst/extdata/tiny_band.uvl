@@ -1,0 +1,9 @@
+features
+	TinyBand {abstract true}
+		optional
+			GPS
+			NFC
+			AlwaysOnDisplay
+
+constraints
+	!(GPS & NFC & AlwaysOnDisplay)

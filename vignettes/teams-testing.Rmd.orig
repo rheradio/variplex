@@ -1,0 +1,707 @@
+---
+title: "Teams and testing"
+output:
+  rmarkdown::html_vignette:
+    css: !expr c(system.file("rmarkdown/templates/html_vignette/resources/vignette.css", package = "rmarkdown"), "vp.css")
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Teams and testing}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+source("setup.R")
+vp_setup("teams-testing")
+vp_manual_data()
+```
+
+```{r models, include = FALSE}
+vp_manual_models()
+```
+
+# Splitting the configuration among teams {#sec:teams}
+
+A large product is rarely configured by one person. The display engineers decide the display features, the radio engineers the Bluetooth ones, the people who know payment decide payment: each group of people, a **team**, decides the features it knows. The split works well when the teams do not interfere, that is, when no decision of one team forces, forbids or needs a decision of another. This section gathers the operations that help to split the configuration in that way: to find parts that need no coordination at all, to measure how much a proposed split interferes and where, to improve it, to order the teams, and to find the few decisions worth taking together before the teams start.
+
+**When do two teams interfere?** When a feature of one and a feature of the other are joined by a link of the graphs. Each kind of link interferes in its own way:
+
+-   *f requires g* (arrow): if the team of $f$ selects it, the team of $g$ must select $g$; if the team of $g$ leaves it out, the team of $f$ must leave $f$ out.
+
+-   *f excludes g* (red line): whoever selects first forbids the other feature to the other team.
+
+-   *f or g* (at-least-one line): if one team leaves its feature out, the other team must select its own.
+
+A split is a tibble with one row per feature and its team. The examples use the teams that a person who knows the Mi Band would form, the same grouping as in [Communities](patterns.html#sec:communities):
+
+```{r teams_declared}
+teams <- tibble(
+  feature = c(
+    "Screen",
+    "TouchScreen",
+    "OLED",
+    "CapacityButton",
+    "ContactlessPayment",
+    "NFC",
+    "MovementFilter",
+    "HeartRateSensor",
+    "BLEv40",
+    "BLEv42",
+    "BT40"
+  ),
+  team = c(
+    "display",
+    "display",
+    "display",
+    "display",
+    "payment",
+    "payment",
+    "sensors",
+    "sensors",
+    "bluetooth",
+    "bluetooth",
+    "bluetooth"
+  )
+)
+teams |> count(team)
+```
+
+Core and dead features need no team, since they are already decided. A variable feature that no team owns goes to a team called `(unassigned)`, with a warning.
+
+::: {.vp-box .vp-goodtoknow}
+The operations of this section, at a glance:
+
+| **Question**                                       | **Function**               | **Section**                                                                  |
+|:---------------------------------------------------|:---------------------------|:-----------------------------------------------------------------------------|
+| Which teams never need to talk?                    | `vp_independent_parts`               | [Teams that never need to talk: independent parts](#sec:parts)               |
+| Which single features tie a part together?         | `vp_cut_features`               | [Cut features](#sec:cuts)                 |
+| Where do two teams interfere?                      | `vp_team_links`               | [Where two teams interfere](#sec:teamlinks)       |
+| How independent is each team?                      | `vp_teams`               | [How independent each team is](#sec:teamsummary)   |
+| Which features sit better in another team?         | `vp_team_moves`               | [Features that sit better in another team](#sec:teammoves)       |
+| What split do the links suggest?                   | `vp_communities`               | [A split proposed by the links](#sec:teamproposal) |
+| In which order should the teams decide?            | `vp_team_order`               | [In which order the teams decide](#sec:teamorder)       |
+| Which decisions, taken first, cut the model apart? | `vp_split_after`, `vp_splitting_decisions` | [Decisions that cut the model apart](#sec:teamcuts)         |
+
+:::
+
+## Teams that never need to talk: independent parts {#sec:parts}
+
+*Function:* `vp_independent_parts()`
+
+**The question.** Does the model fall into parts that can be configured, tested, and handed to teams, each on its own?
+
+Take the three graphs together and look for groups of features that no link joins to the rest (the connected components): the **independent parts**. A choice in one part never forces or forbids anything in another, so a team that owns a whole part never interferes with anyone, and the part can be configured, tested and studied apart. The band has two parts (the figure): payment (NFC and contactless payment) and everything else.
+
+```{r teams_parts}
+vp_independent_parts(band) |>
+  group_by(part) |>
+  summarise(features = paste(feature, collapse = ", "))
+vp_independent_parts(bb) |> distinct(part, size) |> head(4)
+vp_independent_parts(bb) |> distinct(part) |> nrow()
+```
+
+So the payment team is free; the other three teams share one part and will interfere. BusyBox falls into `r facts$BusyParts` parts; the largest has `r facts$BusyLargestPart` of its `r facts$BusyFeaturesLast` features, and `r facts$BusyIsolated` are single features with no strong relationship at all. On large models the parts help little: Linux 3.13 has one part of `r facts$LinuxLargestPart` of its `r facts$LinuxFeatures` options. The rest of this section deals with teams that share a part.
+
+```{r parts_facts, include = FALSE}
+ip <- vp_independent_parts(bb)
+fact("BusyParts", n_distinct(ip$part))
+fact("BusyLargestPart", max(ip$size))
+fact("BusyIsolated", sum(ip$size == 1))
+```
+
+**Why it matters.** A part is the safest unit to hand to a team or to a test campaign: whatever is decided in it, no other part is affected, so the parts can be configured, reviewed and tested separately, and combined freely. A model that falls into many parts is easier to scale than one in which everything is tied to everything.
+
+::: {.vp-box .vp-limitsbox}
+**Limits: what this cannot tell you**
+
+Independent as far as relationships between two features go: a rule over three features ("A needs B or C", with A in one part and B and C in another) can still tie two parts together. For testing, combine the parts only after checking the model for such rules.
+
+:::
+
+## Cut features {#sec:cuts}
+
+*Function:* `vp_cut_features()`
+
+**The question.** Which single features hold two parts of the model together?
+
+A **cut feature** is one whose removal splits its part into pieces (an articulation point). Cut features are computed on the minimal form, which is close to what was written; on the complete graphs, almost nothing is a cut:
+
+```{r cuts}
+vp_cut_features(band)
+vp_cut_features(bb) |> head(4)
+```
+
+Without the screen, the main part of the band falls into three pieces (the figure): *TouchScreen* alone, *BT40* alone, and the rest. In BusyBox, `CONFIG_LONG_OPTS` and `CONFIG_FIND` hold more than twenty pieces each together: a change to them reaches places that have nothing else in common.
+
+![The minimal form of the band: requirements (blue), primitive conflicts (dashed red) and the primitive at-least-one line (dotted green). Its two independent parts are in blue and green; the screen (yellow) is the cut feature of the larger part.](figures/am_parts.svg){#fig:parts}
+
+**Why it matters.** A cut feature is a single point of coupling between subsystems: everything on one side reaches the other only through it. It is where a modularisation would cut, where a change crosses subsystem boundaries, and what to review first when a change affects features that seem unrelated.
+
+::: {.vp-box .vp-limitsbox}
+**Limits: what this cannot tell you**
+
+Cuts of the graphs: the pieces may still be tied by rules over three features. A feature that is not a cut can still be essential; it only means that some other path of links joins its neighbours.
+
+:::
+
+## Where two teams interfere {#sec:teamlinks}
+
+*Function:* `vp_team_links()`
+
+**The question.** Which links join features of different teams?
+
+`vp_team_links()` lists every link of the graphs whose two features belong to different teams, with the team of each end. Counted by pair of teams, it shows who must talk to whom, and about what:
+
+```{r team_links}
+vp_team_links(band, teams) |> count(from_team, link, to_team)
+vp_team_links(vp_minimal(band), teams)
+```
+
+On the complete graphs (the first answer) there are `r facts$BandTeamLinks` such links: every pair of features of two teams whose decisions constrain each other. The arrows from the Bluetooth team to the display team, for example, say that both versions of BLE need the screen: the Bluetooth team cannot offer BLE if the display team leaves the screen out. On the minimal form (the second answer) there are `r facts$BandTeamLinksMin`: roughly what was written between the teams, which is what they must discuss (the figure). The complete graphs count more because a link to the screen is also a link to the two members of its atomic set, and because chains of links add the links they imply.
+
+
+![The minimal form of the band, split among four teams. The thick links join two teams: requirements (blue), conflicts (dashed red) and at-least-one lines (dotted green). The payment team has none.](figures/am_teams.svg){#fig:teams}
+
+**Why it matters.** The links between teams are the points where the configuration needs coordination. Listing them turns "the teams must coordinate" into a short agenda: which features, which teams, and whether the issue is a requirement (one team waits for the other), a conflict (only one of them can have its way) or an at-least-one line (one of them must say yes).
+
+::: {.vp-box .vp-limitsbox}
+**Limits: what this cannot tell you**
+
+-   Links between two features only. Through a rule over three features, two teams can interfere with no link between them.
+
+-   Without the at-least-one graph (`or_graph = TRUE`), the interference through leaving features out is missing, and the function warns.
+
+-   A link says that two decisions constrain each other, not that the teams disagree: often one of the decisions is obvious.
+
+:::
+
+## How independent each team is {#sec:teamsummary}
+
+*Function:* `vp_teams()`
+
+**The question.** For each team: how many links stay inside it, how many go to other teams, and how many of its features can it decide alone?
+
+```{r teams_summary}
+vp_teams(band, teams)
+```
+
+The columns, for a team $T$:
+
+| **Column**   | **Meaning**                                                                                                              |
+|:-------------|:-------------------------------------------------------------------------------------------------------------------------|
+| `features` | $|T|$, the features the team decides.                                                                                    |
+| `links_inside` | The links with both ends in $T$.                                                                                         |
+| `links_outside` | The links with one end in $T$ and the other in another team.                                                             |
+| `teams_linked` | How many other teams $T$ shares a link with: the teams it must talk to.                                                  |
+| `free_features` | The features of $T$ with no link to another team: $T$ decides them alone.                                                |
+| `free_share` | $\dfrac{\text{free features}}{|T|}$: 1 for a team that never needs anybody, 0 for one that cannot decide anything alone. |
+
+On the band only the payment team is free: every feature of the other three teams is tied to another team. On Linux, a split by the first word of the option names (`USB_...`, `SND_...`, `NET_...`: the subsystems that maintainers know) into ten teams, plus one team `other` for the rest, gives:
+
+```{r teams_linux}
+big <- c(
+  "USB",
+  "SND",
+  "DVB",
+  "VIDEO",
+  "SENSORS",
+  "NET",
+  "SCSI",
+  "FB",
+  "CRYPTO",
+  "MTD"
+)
+linux_teams <- vp_features(linux) |>
+  filter(status == "variable") |>
+  select(feature) |>
+  mutate(
+    team = sub("_.*", "", feature),
+    team = ifelse(team %in% big, team, "other")
+  )
+vp_teams(linux, linux_teams) |>
+  select(
+    team,
+    features,
+    links_outside,
+    teams_linked,
+    free_features,
+    free_share
+  ) |>
+  arrange(desc(free_share))
+```
+
+Only the memory-device team (`MTD`) decides more than half of its options alone. `r facts$LinuxTeamsNoFree` of the ten subsystem teams cannot decide a single option alone, sound and USB among them: every one of their options is tied to an option of another team, very often of the team `other`, where the buses, the architecture and the core of the kernel are.
+
+**Why it matters.** The share of free features says how much a team can work on its own; the number of linked teams, how many meetings it needs. A split in which most teams have a high free share and few linked teams can be run in parallel; one in which they do not is a split on paper only.
+
+::: {.vp-box .vp-limitsbox}
+**Limits: what this cannot tell you**
+
+Counts of links between two features: a rule over three features can tie a "free" feature to another team. On the complete graphs, a team that owns a hub, or a large atomic set, collects many links; on the minimal form (`vp_teams(vp_minimal(model), teams)`) the counts are closer to what was written. Both are measures of the graphs, not of how hard the teams will find it to agree.
+
+:::
+
+## Features that sit better in another team {#sec:teammoves}
+
+*Function:* `vp_team_moves()`
+
+**The question.** Which features have more links to another team than to their own?
+
+Moving such a feature turns its links to the other team into inside links. `vp_team_moves()` lists them, the largest gain first. On the minimal form, which counts what was written:
+
+```{r team_moves}
+vp_team_moves(vp_minimal(band), teams)
+vp_team_moves(vp_minimal(linux), linux_teams) |> head(5)
+```
+
+On the band the answer is a warning rather than advice: the screen is tied more to the Bluetooth team than to its own, because both versions of BLE need it and classic Bluetooth is its opposite. Nobody would give the screen to the radio engineers; the answer says that the Bluetooth team will need the display team, whatever the split. On Linux the advice is good: the option that turns on digital television (`MEDIA_DIGITAL_TV_SUPPORT`) belongs with the DVB team, the hardware monitoring framework (`HWMON`) with the sensors team, and `ETHERNET` with networking. Moving those three cuts the written links between teams from `r facts$LinuxTeamMinBefore` to `r facts$LinuxTeamMinAfter`, and gives the sensors team its first free options. The third line shows the opposite case: `NET` itself would go to `other`, because every corner of the kernel needs networking; a hub belongs to whoever knows it, wherever its links go.
+
+```{r team_moves_facts, include = FALSE}
+mv <- vp_team_moves(vp_minimal(linux), linux_teams) |>
+  filter(better_team != "other") |>
+  head(3)
+stopifnot(identical(
+  sort(mv$feature),
+  sort(c("MEDIA_DIGITAL_TV_SUPPORT", "HWMON", "ETHERNET"))
+))
+moved <- linux_teams |>
+  left_join(select(mv, feature, better_team), by = "feature") |>
+  mutate(team = coalesce(better_team, team)) |>
+  select(-better_team)
+between <- function(t) sum(vp_teams(vp_minimal(linux), t)$links_outside) / 2
+fact("LinuxTeamMinBefore", between(linux_teams))
+fact("LinuxTeamMinAfter", between(moved))
+lt <- vp_teams(linux, linux_teams)
+fact("LinuxTeamsNoFree", sum(lt$team != "other" & lt$free_features == 0))
+fact("LinuxLargestPart", max(vp_independent_parts(linux)$size))
+stopifnot(
+  vp_teams(linux, moved)$free_features[
+    vp_teams(linux, moved)$team == "SENSORS"
+  ] >
+    0
+)
+```
+
+**Why it matters.** Teams are usually formed from an existing organisation (menus, directories, departments). The moves point at the features where that organisation and the dependencies disagree: either the feature is in the wrong team, or two teams will always need each other at that point, and the agenda of their meetings should start there.
+
+::: {.vp-box .vp-limitsbox}
+**Limits: what this cannot tell you**
+
+-   A candidate for a person to judge: who knows the feature matters more than where its links go. A hub is linked to everyone and should rarely move.
+
+-   Each move is judged alone; moving two features together can gain more, or less, than the two moves apart.
+
+-   As in the previous operations, rules over three features are not counted.
+
+:::
+
+## A split proposed by the links {#sec:teamproposal}
+
+*Function:* `vp_communities + vp_teams()`
+
+**The question.** If the teams could be formed freely, which split would interfere least?
+
+The communities of [Communities](patterns.html#sec:communities) are groups of features with many links inside and few between: a split proposed by the links alone. With the three graphs, every feature goes to a community, and the communities can be used as teams. Compared with the teams of the people who know the band, on the minimal form:
+
+```{r team_proposal}
+proposal <- vp_communities(
+  band,
+  graphs = c("requires", "excludes", "atleastone")
+)
+proposal |>
+  group_by(community) |>
+  summarise(features = paste(feature, collapse = ", "))
+between <- function(t) {
+  vp_teams(vp_minimal(band), t) |>
+    summarise(
+      teams = n(),
+      links_between = sum(links_outside) / 2,
+      free = sum(free_features)
+    )
+}
+bind_rows(known = between(teams), proposed = between(proposal), .id = "split")
+vp_compare_groupings(proposal, teams)
+```
+
+The proposal puts the screen and classic Bluetooth in one team, since one of them is in every band, and the sensors with the two versions of BLE. It has three teams instead of four and `r facts$BandProposalBetween` written links between teams instead of `r facts$BandKnownBetween`. The two splits are fairly alike (the last number, 1 for identical splits, [Communities](patterns.html#sec:communities)). In practice, start from the teams that the organisation has, and use the proposal to see which features it would place elsewhere.
+
+```{r team_proposal_facts, include = FALSE}
+fact("BandProposalBetween", between(proposal)$links_between)
+fact("BandKnownBetween", between(teams)$links_between)
+```
+
+**Why it matters.** It shows how far the existing organisation is from one that follows the dependencies. When the two are close, the organisation can stay; when they are far apart, the configuration will need much coordination, and the proposal shows where.
+
+::: {.vp-box .vp-limitsbox}
+**Limits: what this cannot tell you**
+
+-   The proposal knows links, not people: it can ask a team to decide features nobody in it knows.
+
+-   The number of teams is not chosen; it is what the algorithm finds. A split into many small teams has fewer links inside, so compare splits with similar numbers of teams. The algorithm also depends on a random seed ([Communities](patterns.html#sec:communities)).
+
+-   With all three graphs, a conflict counts as a reason to be in the same team, like a requirement: two features that compete are best decided by the same people.
+
+:::
+
+## In which order the teams decide {#sec:teamorder}
+
+*Function:* `vp_team_order()`
+
+**The question.** Which team should decide first, which ones must decide together, and which must agree?
+
+The safe order of [A safe order for the questions](conflicts-configuring.html#sec:rounds) asks about a requirement before the features that need it. Between teams the rule is the same: a team **waits for** another when one of its features requires a feature of the other. Teams that wait for each other, directly or around a circle, must decide together. Conflicts and at-least-one lines have no right order: whoever decides first narrows what the other can choose, so those teams **must agree**. `vp_team_order()` gives the rounds:
+
+```{r team_order}
+vp_team_order(band, teams)
+vp_team_order(band, proposal)
+```
+
+With the teams of the people who know the band, the display and payment teams go first. The Bluetooth and sensors teams wait for the display team, and they wait for each other (the movement filter needs BLE 4.0; BLE 4.2 needs the heart-rate sensor), so they must decide together; the Bluetooth team must also agree with the display team about classic Bluetooth and the screen. With the proposal, the knot disappears: the team of the screen and classic Bluetooth (community 1) and the payment team go first, and the team of the sensors and BLE follows, agreeing with the first on its conflicts.
+
+On Linux with the eleven teams above, every team waits, through others, for every other: the team `other` holds the buses and the core that everyone needs, and needs options of every subsystem in turn. Restricted to the options of the ten subsystems (with `vp_subset()`, which is exact, [Part of a model](reading-and-drawing.html#sec:subset)), an order appears:
+
+```{r team_order_linux}
+ten <- linux_teams |> filter(team != "other")
+vp_team_order(vp_subset(linux, ten$feature), ten) |>
+  select(team, round, waits_for, decide_together_with)
+```
+
+Cryptography, networking and SCSI go first and decide together; memory devices and sensors also go first, each on its own. Then the five multimedia and device teams decide together, after the first round, since some of them wait for networking, cryptography or SCSI.
+
+**Why it matters.** It turns the links between teams into a plan of work: who can start at once, who waits for whom, and where a joint session is unavoidable. A configuration done in that order never asks a team to undo a decision because a team it depends on decided later.
+
+::: {.vp-box .vp-limitsbox}
+**Limits: what this cannot tell you**
+
+-   The order respects requirements between two features. It does not settle conflicts, which need agreement whatever the order, nor rules over three features, through which a later decision can still make an earlier one impossible: check the final configuration with a solver.
+
+-   One link is enough to make a team wait; the order says nothing about how much there is to wait for (`vp_team_links()` does).
+
+:::
+
+## Decisions that cut the model apart {#sec:teamcuts}
+
+*Function:* `vp_split_after()`
+
+**The question.** Which few decisions, taken first and together, leave a model that falls into independent parts?
+
+Once a feature is decided, everything it forces is decided too, and the links through those features no longer tie anything: what is left may fall into parts. `vp_split_after()` takes some decisions and returns the independent parts of the features still undecided (its attribute `decided` lists those that the decisions settle). `vp_splitting_decisions()` tries every single decision, selecting and leaving out each feature, and sorts them by the largest part they leave:
+
+```{r split_after}
+vp_split_after(band, deselected = "Screen") |>
+  group_by(part) |>
+  summarise(features = paste(feature, collapse = ", "))
+vp_splitting_decisions(band) |> head(4)
+```
+
+Leaving out the screen decides eight features (the screen, its atomic set and everything that needs it are left out, and classic Bluetooth is forced in) and leaves two parts, which two teams can decide apart. The best single decisions leave no part of more than two features: a short first meeting about the screen or the version of Bluetooth turns the band into pieces.
+
+On Linux, the function tries the 50 options with the most links:
+
+```{r split_linux}
+cuts <- vp_splitting_decisions(linux)
+attr(cuts, "largest_before")
+head(cuts, 4)
+```
+
+With no decision, the largest part has `r facts$LinuxLargestPart` options. The best single decision, leaving out `NLATTR` (the netlink attributes, which networking needs), settles `r facts$LinuxCutDecided` options and leaves `r facts$LinuxCutParts` parts, but the largest still has `r facts$LinuxCutLargest` options. Linux does not fall apart with one decision. Several, taken together with `vp_split_after()`, go further: a kernel for a small device without netlink attributes, PCI and I^2^C buses,
+
+```{r split_linux_three}
+three <- vp_split_after(linux, deselected = c("NLATTR", "PCI", "I2C"))
+c(
+  decided = length(attr(three, "decided")),
+  parts = n_distinct(three$part),
+  largest = max(three$size)
+)
+```
+
+settles `r facts$LinuxThreeDecided` options and leaves a largest part of `r facts$LinuxThreeLargest`.
+
+```{r split_three_facts, include = FALSE}
+fact("LinuxThreeDecided", length(attr(three, "decided")))
+fact("LinuxThreeLargest", max(three$size))
+```
+
+```{r split_facts, include = FALSE}
+fact("LinuxCutDecided", cuts$decided[1])
+fact("LinuxCutParts", cuts$parts[1])
+fact("LinuxCutLargest", cuts$largest_part[1])
+stopifnot(
+  cuts$feature[1] == "NLATTR",
+  cuts$decision[1] == "left out",
+  "NLATTR" %in% vp_requirements(linux, "NET")$feature
+)
+```
+
+**Why it matters.** It identifies the decisions for a kick-off meeting: a handful of choices, taken together by representatives of all the teams, after which the teams can work in parallel without interfering. In practice these are often the choices that define the kind of product (the platform, the presence of a whole subsystem).
+
+::: {.vp-box .vp-limitsbox}
+**Limits: what this cannot tell you**
+
+-   Parts of the graphs: a rule over three features can still tie two parts. And what a set of decisions forces is what each forces alone ([What some decisions force](conflicts-configuring.html#sec:consequences)): two decisions together may force more, which can only cut the model further.
+
+-   `vp_splitting_decisions()` tries one decision at a time, on at most 50 candidate features for a large model (give others with `candidates`). The best combination of several decisions is not searched: try it with `vp_split_after()`.
+
+-   Decisions that leave features out need the at-least-one graph: without it, what they force is incomplete.
+
+:::
+
+# Testing {#sec:testing}
+
+A product line cannot test every product, so it tests a **sample**. A **$t$-wise** sample covers every valid combination of values of $t$ features at least once: for $t = 1$, every feature selected and left out; for $t = 2$, for every pair of features, every valid combination of the four (both, only one, only the other, neither). The graphs answer three questions about samples without a solver.
+
+A sample is a table with one row per configuration and one column per feature, holding 0 and 1. The file `data/sample.csv` has five bands:
+
+```{r sample}
+sample <- read.csv("data/sample.csv")
+sample
+```
+
+## How many combinations to cover
+
+*Function:* `vp_combinations_to_cover()`
+
+**The question.** How many combinations must a $t$-wise sample cover?
+
+**For one feature ($t = 1$).** Each variable feature can be selected and can be left out, in some product: that is what "variable" means. So there are two things to cover per feature, $2n$ in all; core and dead features are fixed and add nothing. The band has 11 variable features, so 22.
+
+**For two features ($t = 2$).** Each pair of features has four combinations: both, only the first, only the second, neither. With $n$ features there are $\binom{n}{2}$ pairs, so at most $4\binom{n}{2}$ combinations; for the band, $4 \times 55 = 220$. But some combinations occur in no product, and a sample cannot (and need not) cover them. Look at three pairs of the band:
+
+```{r combinations_pairs}
+vp_pair(band, "NFC", "HeartRateSensor") |>
+  select(combination, possible, ruled_out_by)
+vp_pair(band, "TouchScreen", "Screen") |>
+  select(combination, possible, ruled_out_by)
+vp_pair(band, "Screen", "BT40") |> select(combination, possible, ruled_out_by)
+```
+
+-   NFC and the heart-rate sensor are not linked: the four combinations occur, and a 2-wise sample must show all four.
+
+-   The touch screen requires the screen: "a touch screen without a screen" occurs in no band. Three combinations to cover.
+
+-   The screen and classic Bluetooth exclude each other, and every band has one of them: "both" and "neither" are impossible. Two combinations to cover.
+
+Each link of the graphs rules out *exactly one* combination of its pair, and two links never rule out the same one:
+
+| **Link**                          | **Rules out**              | **Example**                            |
+|:----------------------------------|:---------------------------|:---------------------------------------|
+| $f$ requires $g$ (an arrow)       | $f$ selected, $g$ left out | a touch screen without a screen        |
+| $f$ excludes $g$ (a red line)     | both selected              | a screen with classic Bluetooth        |
+| $f$ or $g$ (an at-least-one line) | both left out              | neither a screen nor classic Bluetooth |
+
+(Two features that require each other, as in an atomic set, have two arrows, which rule out the two "only one" combinations.) So the count is a subtraction, with $|R|$, $|E|$ and $|A|$ the numbers of arrows, conflicts and at-least-one lines of the complete graphs:
+
+$$\text{combinations to cover} = 4\binom{n}{2} - |R| - |E| - |A|$$
+
+```{r combinations}
+vp_combinations_to_cover(band, t = 1)
+vp_combinations_to_cover(band, t = 2)
+c(
+  pairs = choose(11, 2),
+  at_most = 4 * choose(11, 2),
+  requires = nrow(band$requires),
+  excludes = nrow(band$excludes),
+  atleastone = nrow(band$atleastone)
+)
+```
+
+For the band: $220 - `r facts$BandArrows` - `r facts$BandConflicts` - `r facts$BandLines` = `r facts$CoverTwo`$. Every one of these `r facts$CoverTwo` combinations occurs in some product (for two features the graphs are exact, [Everything about two features](conflicts-configuring.html#sec:pair)), so a 2-wise sample must show each of them at least once. Sampling tools usually find this number with one solver call per pair [Johansen et al. (2012)](#ref-Johansen12); the graphs give it with a subtraction.
+
+```{r cover_facts, include = FALSE}
+fact("CoverTwo", vp_combinations_to_cover(band, 2)$combinations)
+fact("BandArrows", nrow(band$requires))
+fact("BandConflicts", nrow(band$excludes))
+fact("BandLines", nrow(band$atleastone))
+stopifnot(
+  4 *
+    choose(11, 2) -
+    nrow(band$requires) -
+    nrow(band$excludes) -
+    nrow(band$atleastone) ==
+    vp_combinations_to_cover(band, 2)$combinations
+)
+```
+
+**Why it matters.** It is the size of the job a $t$-wise test campaign must do: the number of feature interactions that exist in some product and therefore need to be tested. Without the graphs, finding it takes one solver call per combination.
+
+::: {.vp-box .vp-limitsbox}
+**Limits: what this cannot tell you**
+
+For two features the count is exact with the three graphs. Without the at-least-one graph, `exact` is `FALSE`: the "neither" combinations of the missing lines are counted, so the number is an upper limit.
+
+:::
+
+## How much a sample covers, and what it misses
+
+*Function:* `vp_coverage()`
+
+**The question.** How much of that does a given sample cover, and what does it miss?
+
+**How `vp_coverage()` counts.** It reads the sample as a table of 0 and 1, one row per configuration and one column per variable feature (other columns, such as `product`, are ignored). Then:
+
+-   For $t = 1$, a value of a feature ("Screen selected", "Screen left out") is *covered* if at least one row has it.
+
+-   For $t = 2$, a combination of a pair ("Screen left out and ContactlessPayment selected") is covered if at least one row has both values. Only the combinations that some product can have are counted: one that the graphs rule out would be a broken rule, which `vp_sample_violations()` reports, not coverage.
+
+-   The coverage is the share: $\text{coverage} = \dfrac{\text{covered}}{\text{to cover}}$, with "to cover" the count of the previous operation.
+
+Take the pair of the screen and contactless payment in the five bands of the sample:
+
+```{r coverage_pair}
+sample |> count(Screen, ContactlessPayment)
+```
+
+Three of the four combinations are there. The fourth, "no screen, but contactless payment", is missing, and it is possible (the graphs do not rule it out, and for pairs they are exact): it is one of the combinations the sample does not cover. `vp_coverage()` does this for every pair and every value at once:
+
+```{r coverage}
+vp_coverage(band, sample)
+vp_sample_violations(band, sample)
+```
+
+The five bands cover every single value (22 of 22), and `r facts$CoverCovered` of the `r facts$CoverTwo` combinations of two features, `r facts$CoverPct` %. No band breaks a link of the graphs, as it should be for valid bands.
+
+**How `vp_uncovered()` lists what is missing.** For each pair of features and each of its four combinations, it keeps the combination when the graphs allow it and no row of the sample has it. Each row of the answer is one such combination: `feature_1` with `value_1` and `feature_2` with `value_2` (`TRUE` for selected):
+
+```{r uncovered}
+missing <- vp_uncovered(band, sample)
+nrow(missing)
+head(missing, 6)
+# which features take part in the most missing combinations?
+tibble(
+  feature = c(missing$feature_1, missing$feature_2),
+  value = c(missing$value_1, missing$value_2)
+) |>
+  count(feature, value, sort = TRUE) |>
+  head(4)
+```
+
+The `r facts$CoverMissing` missing combinations cluster: the sample has a single band without a screen (product 24, which has almost nothing), so "no screen" (and, with it, no OLED and no capacity button) has never been seen with payment, with the heart-rate sensor or with NFC. The count says what the next product should have. The file of all the valid bands has one without a screen but with classic Bluetooth, NFC, contactless payment and the heart-rate sensor; adding it:
+
+```{r coverage_next}
+products <- read.csv("data/miband3_products.csv")
+better <- bind_rows(sample, products |> filter(product == 19))
+vp_coverage(band, better)
+nrow(vp_uncovered(band, better))
+```
+
+One more band covers `r facts$CoverGain` of the `r facts$CoverMissing` missing combinations: the coverage of pairs rises from `r facts$CoverPct` % to `r facts$CoverPctNext` %. Repeating the step (find what is missing, pick a valid product that has much of it) is how `vp_pick_sample()` builds a sample, below.
+
+```{r coverage_facts, include = FALSE}
+cv <- vp_coverage(band, sample)
+fact("CoverPct", pct(cv$coverage[2]))
+fact("CoverMissing", nrow(vp_uncovered(band, sample)))
+fact("CoverCovered", cv$covered[2])
+cv2 <- vp_coverage(band, better)
+fact("CoverPctNext", pct(cv2$coverage[2]))
+fact(
+  "CoverGain",
+  nrow(vp_uncovered(band, sample)) - nrow(vp_uncovered(band, better))
+)
+stopifnot(
+  cv$covered[2] + nrow(vp_uncovered(band, sample)) == cv$to_cover[2],
+  nrow(vp_sample_violations(band, better)) == 0
+)
+```
+
+**Why it matters.** It tells a test team how much of the interaction space its products exercise, and exactly which interactions remain untested, so that the next products can be chosen to cover them.
+
+::: {.vp-box .vp-limitsbox}
+**Limits: what this cannot tell you**
+
+-   For combinations of one or two features, the coverage and the list of missing combinations are exact with the three graphs: every combination listed occurs in some product. Without the at-least-one graph, some "neither" combinations may be listed that no product has.
+
+-   A configuration that breaks no link can still be invalid, because of a rule over three features: `vp_sample_violations()` finds invalid configurations, but not all of them; add only products known to be valid (built by a solver or a sampling tool).
+
+:::
+
+## How small a sample can be
+
+*Function:* `vp_min_sample_size()`
+
+**The question.** What is the smallest number of configurations that any covering sample must have?
+
+**The idea: things that cannot share a configuration.** Call *item* each thing a sample must cover: for $t = 1$, a decision such as "*BLEv42* selected" or "*CapacityButton* left out"; for $t = 2$, a combination of two decisions. Two items are **incompatible** when no configuration can have both, such as "*MovementFilter* selected" and "*Screen* left out". Now suppose there are $k$ items that are incompatible *two by two*. A configuration contains at most one of them, so covering all $k$ needs at least $k$ configurations, one per item. No sampling tool can do better, however clever.
+
+**When are two decisions incompatible?** The graphs say it exactly, for every pair of decisions:
+
+| **Two decisions**          | **Incompatible when**          | **Example on the band**           |
+|:---------------------------|:-------------------------------|:----------------------------------|
+| $f$ selected, $g$ selected | $f$ excludes $g$               | *MovementFilter* and *BLEv42*     |
+| $f$ selected, $g$ left out | $f$ requires $g$               | *BLEv42* and *not CapacityButton* |
+| $f$ left out, $g$ left out | $f$ or $g$ (at-least-one line) | *not Screen* and *not BT40*       |
+| $f$ selected, $f$ left out | always                         | *NFC* and *not NFC*               |
+
+`vp_min_sample_size()` builds the **incompatibility graph**: one node per item, and a line between two items that are incompatible. A set of items incompatible two by two is a set of nodes all joined to one another, a **clique**. The function looks for the largest clique, and its size is the bound. It returns the clique itself, one item per row, as the proof:
+
+```{r minsize}
+vp_min_sample_size(band, t = 1)
+vp_min_sample_size(band, t = 2)
+```
+
+**For $t = 1$.** The items are the $2n$ decisions, 22 on the band, and the largest clique has `r facts$MinOne` of them (the figure): *BLEv42* and the movement filter exclude each other, and both need the capacity button (which is in the atomic set of the screen), so neither can be in a band without it. No band has two of the three, so a sample that selects *BLEv42*, selects the movement filter and leaves out the capacity button needs three bands at least.
+
+<figure id="fig:minsize">
+
+<figcaption>The largest clique of the incompatibility graph of the band for <span class="math inline"><em>t</em> = 1</span>: three decisions, every two of which no band can have together (each line says why). So any sample in which every decision appears needs at least three bands.</figcaption>
+</figure>
+
+**For $t = 2$.** The items are the `r facts$CoverTwo` combinations of two features that some band has ([Testing](#sec:testing), "How many combinations to cover"). Two combinations are incompatible when any decision of one is incompatible with any decision of the other. In the clique of `r facts$MinTwo` above, for example:
+
+-   "*NFC* and *not ContactlessPayment*" and "*ContactlessPayment* and *BLEv40*": contactless payment would be both left out and selected.
+
+-   "*ContactlessPayment* and *BLEv40*" and "*ContactlessPayment* and *BLEv42*": the two versions of BLE exclude each other.
+
+-   "*BT40* and *not NFC*" and "*ContactlessPayment* and *BT40*": contactless payment requires NFC.
+
+-   "*MovementFilter* and *not NFC*" and "*BLEv42* and *not NFC*": the movement filter excludes BLE 4.2.
+
+The other pairs of the seven are incompatible in the same ways, so a 2-wise sample needs at least `r facts$MinTwo` bands.
+
+**Exact or quick.** Finding the largest clique is hard in general. For $t = 1$ the graph has $2n$ nodes and is sparse, and the exact search is fast, also for Linux. For $t = 2$ the graph has about $2n^2$ nodes, so the function needs a small model (`max_features`, 40 by default) and searches exactly only up to 250 nodes (about 11 features); above, it uses a quick greedy search: it starts from the items with the most incompatibilities and keeps adding an item incompatible with all those chosen. The clique it finds is still a valid proof, so the bound is still right, but a larger clique may exist (`exact = TRUE` forces the exact search, which can take hours).
+
+**Is the bound reached?** `vp_pick_sample()` picks a small covering sample from configurations you already have, here all the valid bands:
+
+```{r pick}
+products <- read.csv("data/miband3_products.csv")
+nrow(vp_pick_sample(band, products, t = 1))
+nrow(vp_pick_sample(band, products, t = 2))
+```
+
+```{r minsize_facts, include = FALSE}
+fact("MinOne", vp_min_sample_size(band, 1)$bound[1])
+fact("MinTwo", vp_min_sample_size(band, 2)$bound[1])
+fact("PickOne", nrow(vp_pick_sample(band, products, t = 1)))
+fact("PickTwo", nrow(vp_pick_sample(band, products, t = 2)))
+stopifnot(
+  nrow(vp_pick_sample(band, products, t = 1)) ==
+    vp_min_sample_size(band, 1)$bound[1],
+  nrow(vp_pick_sample(band, products, t = 2)) ==
+    vp_min_sample_size(band, 2)$bound[1]
+) # the text says the bounds are reached
+fact("LinuxMinOne", vp_min_sample_size(linux, 1)$bound[1])
+```
+
+`r facts$PickOne` and `r facts$PickTwo` configurations: the bounds are reached. So, for this model, the smallest $1$-wise sample has exactly `r facts$MinOne` configurations and the smallest $2$-wise sample exactly `r facts$MinTwo`, and the graphs alone prove it. A sampling tool that returns a $2$-wise sample of `r facts$MinTwo` configurations has found the best one possible; one that returns 12 uses 5 more than needed. On Linux 3.13, any sample that selects and leaves out every option at least once needs at least `r facts$LinuxMinOne` configurations (Krupke et al. use the same idea [Krupke et al. (2025)](#ref-Krupke25)).
+
+**Why it matters.** It tells whether a sample is good enough: if a tool returns as many products as the bound, no smaller sample exists and the search can stop. It also tells, before building anything, the minimum cost of a test campaign.
+
+::: {.vp-box .vp-limitsbox}
+**Limits: what this cannot tell you**
+
+-   The bound is a floor, not always the true minimum: it uses only incompatibilities between two decisions, and a rule over three features can force more configurations.
+
+-   For $t = 2$ the bound comes from a quick search above 250 nodes ("Exact or quick", above): still valid, but possibly lower than the best one; models with more than 40 features are refused. For large models use $t = 1$, which is always exact and fast.
+
+-   The graphs cannot build a sample: a configuration must satisfy every rule of the model. `vp_pick_sample()` only chooses among configurations that a solver or a sampling tool produced.
+
+:::
+
+
+```{r finish, include = FALSE}
+vp_finish()
+vp_clean_manual_data()
+```
+
+```{r references, echo = FALSE, results = "asis"}
+vp_references()
+```

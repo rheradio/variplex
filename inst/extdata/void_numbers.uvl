@@ -1,0 +1,10 @@
+features
+	Band {abstract true}
+		mandatory
+			Integer BatteryCapacity
+		optional
+			GPS
+
+constraints
+	BatteryCapacity > 200
+	BatteryCapacity < 150

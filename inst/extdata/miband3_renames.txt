@@ -1,0 +1,2 @@
+# one rename per line: the old name, a space (a tab if a name has spaces), the new name
+BLEv40Old BLEv40

@@ -1,0 +1,30 @@
+c Reconstructed eleven-option Kconfig excerpt (Strong4VM 2.0 tests): 97 configurations,
+c expected: eight requires arcs, nine excludes edges, one at-least-one edge NUMA -- IA64_SGI_SN2.
+c 1 ACPI
+c 2 IA64
+c 3 ACPI_INTERPRETER
+c 4 ACPI_NUMA
+c 5 IA64_GENERIC
+c 6 NUMA
+c 7 IA64_DIG
+c 8 IA64_HP_ZX1
+c 9 X86
+c 10 X86_PC
+c 11 IA64_SGI_SN2
+p cnf 11 16
+-4 3 0
+-3 1 0
+-4 6 0
+-7 2 0
+-8 2 0
+-10 9 0
+-3 -11 0
+-4 -5 0
+-5 -7 0
+-5 -8 0
+-5 -10 0
+-7 -8 0
+-7 -10 0
+-8 -10 0
+6 11 0
+2 -6 9 0

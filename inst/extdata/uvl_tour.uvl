@@ -1,0 +1,21 @@
+features
+	Band {abstract true}
+		mandatory
+			Integer BatteryCapacity
+			Real Price
+			String Model
+			Strap cardinality [1..2]
+		optional
+			Screen {power 40, constraint Screen => Touch}
+				optional
+					Touch {power 5}
+			GPS {power 30}
+			NFC {power 10}
+
+constraints
+	NFC => GPS
+	sum(power) < 80
+	GPS.power + NFC.power < 50
+	BatteryCapacity > 100
+	floor(Price) < 100
+	len(Model) < 20

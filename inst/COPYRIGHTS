@@ -1,0 +1,27 @@
+variplex includes, in src/, code written by other people, under the licences below. The full texts of the licences
+are in the folders named.
+
+Strong4VM (src/s4: the folders api, cli, dimacs2graphs and uvl2dimacs)
+  Copyright (c) 2025 Rubén Heradio, Luis Cambelo, Miguel A. Olivero, José Manuel Sánchez Ruíz, Alberto Pérez
+  García-Plaza and David Fernández Amorós; uvl2dimacs: Copyright (c) 2026 Rubén Heradio and David Fernández Amorós.
+  MIT licence (src/s4/LICENSE, src/s4/uvl2dimacs/LICENSE).
+  https://github.com/rheradio/strong4vm
+
+BoneDigger, backbone solver (src/s4/uvl2dimacs/backbone_solver)
+  Copyright (c) 2025 Rubén Heradio, Luis Cambelo and Dictino Chaos.
+  MIT licence.
+
+Glucose 3.0, SAT solver (src/s4/uvl2dimacs/backbone_solver/src/sat_solvers/glucose_3_0)
+  Copyright (c) 2009-2023 Gilles Audemard and Laurent Simon; based on MiniSat.
+  MIT licence (its LICENSE file).
+
+MiniSat 2.2.0, headers only (src/s4/uvl2dimacs/backbone_solver/src/sat_solvers/minisat_2_2_0)
+  Copyright (c) 2003-2006 Niklas Eén and Niklas Sörensson; Copyright (c) 2007-2010 Niklas Sörensson.
+  MIT licence (its LICENSE file).
+
+ANTLR 4 C++ runtime, version 4.13.1 (src/antlr4), and the UVL parser it generated (src/s4/uvl2dimacs/parser)
+  Copyright (c) 2012-2022 The ANTLR Project. All rights reserved.
+  BSD 3-clause licence (src/antlr4/LICENSE.txt).
+
+The sources were adapted to R by tools/sync_cpp.R (in the source repository of variplex): output goes to the R
+console, and errors end the R call instead of the R session.

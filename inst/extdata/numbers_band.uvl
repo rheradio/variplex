@@ -1,0 +1,12 @@
+features
+	TinyBand {abstract true}
+		mandatory
+			Integer BatteryCapacity
+		optional
+			GPS {power 30}
+			NFC {power 10}
+			AlwaysOnDisplay {power 25}
+
+constraints
+	GPS.power + NFC.power + AlwaysOnDisplay.power < 60
+	BatteryCapacity > 100

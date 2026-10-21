@@ -1,0 +1,354 @@
+/**
+ * @file RelationEncoder.cc
+ * @brief Implementation of relation type encodings to CNF
+ *
+ * This file implements the RelationEncoder class which converts different
+ * types of parent-child relations in feature models to CNF clauses:
+ *
+ * - **MANDATORY**: Child ⟺ Parent (2 clauses)
+ * - **OPTIONAL**: Child → Parent (1 clause)
+ * - **OR**: Parent → (at least one child) (n+1 clauses)
+ * - **ALTERNATIVE**: Parent → (exactly one child) (O(n²) clauses pairwise)
+ * - **CARDINALITY**: Parent → (min..max children) (enumeration-based)
+ *
+ * Each encoding follows standard feature model semantics and SAT encoding
+ * techniques from the literature.
+ *
+ * @author UVL2Dimacs Team
+ * @date 2024
+ */
+
+#include "RelationEncoder.hh"
+#include "Feature.hh"
+#include <stdexcept>
+#include <algorithm>
+#include <functional>
+
+/**
+ * @brief Constructs an encoder for the given CNF model
+ *
+ * @param model CNF model to add relation clauses to
+ * @param conversion_mode CNF mode (STRAIGHTFORWARD or TSEITIN)
+ */
+RelationEncoder::RelationEncoder(CNFModel& model, CNFMode conversion_mode)
+    : cnf_model(model), mode(conversion_mode) {
+}
+
+/**
+ * @brief Encodes a relation to CNF based on its type
+ *
+ * Dispatches to the appropriate encoding method based on relation type:
+ * - MANDATORY → encode_mandatory()
+ * - OPTIONAL → encode_optional()
+ * - OR → encode_or()
+ * - ALTERNATIVE → encode_alternative()
+ * - CARDINALITY → encode_cardinality()
+ *
+ * @param relation The relation to encode
+ * @throws std::runtime_error if relation type is unknown
+ */
+void RelationEncoder::encode_relation(std::shared_ptr<Relation> relation) {
+    switch (relation->get_type()) {
+        case Relation::Type::MANDATORY:
+            encode_mandatory(relation);
+            break;
+        case Relation::Type::OPTIONAL:
+            encode_optional(relation);
+            break;
+        case Relation::Type::OR:
+            encode_or(relation);
+            break;
+        case Relation::Type::ALTERNATIVE:
+            encode_alternative(relation);
+            break;
+        case Relation::Type::CARDINALITY:
+            encode_cardinality(relation);
+            break;
+        default:
+            throw std::runtime_error("Unknown relation type");
+    }
+}
+
+/**
+ * @brief Encodes a MANDATORY relation to CNF
+ *
+ * Semantics: parent ⟺ child (child is selected if and only if parent is selected)
+ *
+ * CNF Encoding (2 clauses):
+ * 1. (¬parent ∨ child) - if parent is selected, child must be selected
+ * 2. (¬child ∨ parent) - if child is selected, parent must be selected
+ *
+ * @param relation The mandatory relation (must have exactly 1 child)
+ * @throws std::runtime_error if relation doesn't have exactly 1 child
+ */
+void RelationEncoder::encode_mandatory(std::shared_ptr<Relation> relation) {
+    // Mandatory: parent <=> child
+    // Clauses: (-parent OR child) AND (-child OR parent)
+
+    auto parent = relation->get_parent();
+    const auto& children = relation->get_children();
+
+    if (children.size() != 1) {
+        throw std::runtime_error("Mandatory relation must have exactly 1 child");
+    }
+
+    int parent_var = cnf_model.get_variable(parent->get_name());
+    int child_var = cnf_model.get_variable(children[0]->get_name());
+
+    // -parent OR child
+    cnf_model.add_clause({-parent_var, child_var});
+
+    // -child OR parent
+    cnf_model.add_clause({-child_var, parent_var});
+}
+
+/**
+ * @brief Encodes an OPTIONAL relation to CNF
+ *
+ * Semantics: child → parent (if child is selected, parent must be selected)
+ *
+ * CNF Encoding (1 clause):
+ * - (¬child ∨ parent) - child implies parent
+ *
+ * Note: Parent can be selected without child (this is what makes it optional).
+ *
+ * @param relation The optional relation (must have exactly 1 child)
+ * @throws std::runtime_error if relation doesn't have exactly 1 child
+ */
+void RelationEncoder::encode_optional(std::shared_ptr<Relation> relation) {
+    // Optional: child => parent
+    // Clause: (-child OR parent)
+
+    auto parent = relation->get_parent();
+    const auto& children = relation->get_children();
+
+    if (children.size() != 1) {
+        throw std::runtime_error("Optional relation must have exactly 1 child");
+    }
+
+    int parent_var = cnf_model.get_variable(parent->get_name());
+    int child_var = cnf_model.get_variable(children[0]->get_name());
+
+    // -child OR parent
+    cnf_model.add_clause({-child_var, parent_var});
+}
+
+/**
+ * @brief Encodes an OR relation to CNF
+ *
+ * Semantics: parent → (child₁ ∨ child₂ ∨ ... ∨ childₙ)
+ * If parent is selected, at least one child must be selected.
+ *
+ * CNF Encoding (n+1 clauses):
+ * 1. (¬parent ∨ child₁ ∨ child₂ ∨ ... ∨ childₙ) - at least one child
+ * 2. For each child i: (¬childᵢ ∨ parent) - child implies parent
+ *
+ * This direct encoding is used in both STRAIGHTFORWARD and TSEITIN modes.
+ * Auxiliary variables are only introduced for cross-tree constraint expressions,
+ * not for feature tree relation clauses which are already valid CNF disjunctions.
+ *
+ * @param relation The OR relation (must have at least 1 child)
+ * @throws std::runtime_error if relation has no children
+ */
+void RelationEncoder::encode_or(std::shared_ptr<Relation> relation) {
+    auto parent = relation->get_parent();
+    const auto& children = relation->get_children();
+
+    if (children.empty()) {
+        throw std::runtime_error("Or relation must have at least 1 child");
+    }
+
+    int parent_var = cnf_model.get_variable(parent->get_name());
+
+    // Collect child variables
+    std::vector<int> child_vars;
+    for (const auto& child : children) {
+        child_vars.push_back(cnf_model.get_variable(child->get_name()));
+    }
+
+    // Direct encoding: emit a single clause of arbitrary length
+    std::vector<int> or_clause = {-parent_var};
+    for (int cv : child_vars) {
+        or_clause.push_back(cv);
+    }
+    cnf_model.add_clause(or_clause);
+
+    // Each child implies parent (always 2 literals)
+    for (int child_var : child_vars) {
+        cnf_model.add_clause({-child_var, parent_var});
+    }
+}
+
+/**
+ * @brief Encodes an ALTERNATIVE relation to CNF
+ *
+ * Semantics: parent → (exactly one of children)
+ * If parent is selected, exactly one child must be selected.
+ *
+ * CNF Encoding (1 + n(n-1)/2 + n clauses = O(n²)):
+ * 1. (¬parent ∨ child₁ ∨ child₂ ∨ ... ∨ childₙ) - at least one child
+ * 2. For each pair (i,j): (¬childᵢ ∨ ¬childⱼ) - at most one child (pairwise)
+ * 3. For each child i: (¬childᵢ ∨ parent) - child implies parent
+ *
+ * This direct encoding is used in both STRAIGHTFORWARD and TSEITIN modes.
+ * Auxiliary variables are only introduced for cross-tree constraint expressions,
+ * not for feature tree relation clauses which are already valid CNF disjunctions.
+ *
+ * @param relation The alternative relation (must have at least 2 children)
+ * @throws std::runtime_error if relation has fewer than 2 children
+ */
+void RelationEncoder::encode_alternative(std::shared_ptr<Relation> relation) {
+    auto parent = relation->get_parent();
+    const auto& children = relation->get_children();
+
+    if (children.size() < 2) {
+        throw std::runtime_error("Alternative relation must have at least 2 children");
+    }
+
+    int parent_var = cnf_model.get_variable(parent->get_name());
+
+    // Collect child variables
+    std::vector<int> child_vars;
+    for (const auto& child : children) {
+        child_vars.push_back(cnf_model.get_variable(child->get_name()));
+    }
+
+    // Direct encoding: emit "at least one child" as a single clause of arbitrary length
+    std::vector<int> or_clause = {-parent_var};
+    for (int cv : child_vars) {
+        or_clause.push_back(cv);
+    }
+    cnf_model.add_clause(or_clause);
+
+    // Encode "at most one child" constraint (pairwise - always 2 literals)
+    for (size_t i = 0; i < child_vars.size(); ++i) {
+        for (size_t j = i + 1; j < child_vars.size(); ++j) {
+            cnf_model.add_clause({-child_vars[i], -child_vars[j]});
+        }
+    }
+
+    // Each child implies parent (always 2 literals)
+    for (int child_var : child_vars) {
+        cnf_model.add_clause({-child_var, parent_var});
+    }
+}
+
+/**
+ * @brief Encodes a CARDINALITY relation to CNF
+ *
+ * Semantics: parent → (select between min and max children)
+ * If parent is selected, between min and max children (inclusive) must be selected.
+ *
+ * Enumeration-based approach (used in both STRAIGHTFORWARD and TSEITIN modes):
+ * - For each invalid count k of selected children (k < min or k > max):
+ *     For each combination C of k children:
+ *       Add clause: (¬parent ∨ ¬(exactly C are selected))
+ * - Valid counts generate no clause (a valid count of 0 allows the parent alone)
+ * - For each child: (¬child ∨ parent)
+ *
+ * Clauses are emitted directly at arbitrary length. Auxiliary variables are only
+ * introduced for cross-tree constraint expressions, not for feature tree relations.
+ *
+ * Complexity: Can generate many clauses for complex cardinalities.
+ * Number of clauses ≈ Σ C(n,k) for invalid counts.
+ *
+ * @param relation The cardinality relation
+ */
+void RelationEncoder::encode_cardinality(std::shared_ptr<Relation> relation) {
+    auto parent = relation->get_parent();
+    const auto& children = relation->get_children();
+    int card_min = relation->get_card_min();
+    int card_max = relation->get_card_max();
+    int num_children = children.size();
+
+    int parent_var = cnf_model.get_variable(parent->get_name());
+
+    // Collect child variables
+    std::vector<int> child_vars;
+    for (const auto& child : children) {
+        child_vars.push_back(cnf_model.get_variable(child->get_name()));
+    }
+
+    // For each invalid count of selected children (count < min or count > max),
+    // forbid every combination of that size when the parent is selected:
+    //   ¬parent ∨ ¬(exactly this combination)
+    // Valid counts generate no clause; in particular a valid count of 0
+    // ([0..k] groups) allows the parent without children (fixes D3, R-UVL-02).
+    for (int count = 0; count <= num_children; ++count) {
+        bool is_invalid = (count < card_min || count > card_max);
+        if (!is_invalid) continue;
+
+        // Generate all combinations of 'count' children
+        auto combinations = generate_combinations(num_children, count);
+
+        for (const auto& combo : combinations) {
+            // Build literals for "NOT(exactly this combination)" and emit directly
+            std::vector<int> clause = {-parent_var};
+            for (int i = 0; i < num_children; ++i) {
+                bool in_combo = std::find(combo.begin(), combo.end(), i) != combo.end();
+                if (in_combo) {
+                    clause.push_back(-child_vars[i]);
+                } else {
+                    clause.push_back(child_vars[i]);
+                }
+            }
+            cnf_model.add_clause(clause);
+        }
+    }
+
+    // Add clauses: each child => parent (always 2 literals)
+    for (int child_var : child_vars) {
+        cnf_model.add_clause({-child_var, parent_var});
+    }
+}
+
+/**
+ * @brief Generates all combinations of k elements from n elements
+ *
+ * Uses backtracking algorithm to generate all C(n,k) combinations,
+ * where each combination is represented as a vector of indices [0, n-1].
+ *
+ * Mathematical formula: C(n,k) = n! / (k! × (n-k)!)
+ *
+ * Examples:
+ * - generate_combinations(3, 2) → {{0,1}, {0,2}, {1,2}}
+ * - generate_combinations(4, 0) → {{}}  (empty combination)
+ * - generate_combinations(2, 3) → {}    (impossible, k > n)
+ *
+ * Algorithm complexity: O(C(n,k) × k) = O(n! / (k! × (n-k)!))
+ *
+ * @param n Total number of elements (children)
+ * @param k Number of elements to choose
+ * @return Vector of all combinations, where each combination is a vector of indices
+ */
+std::vector<std::vector<int>> RelationEncoder::generate_combinations(int n, int k) {
+    std::vector<std::vector<int>> result;
+
+    if (k > n || k < 0) {
+        return result;
+    }
+
+    if (k == 0) {
+        result.push_back({});
+        return result;
+    }
+
+    // Generate combinations using backtracking
+    std::vector<int> current;
+    std::function<void(int, int)> backtrack = [&](int start, int depth) {
+        if (depth == k) {
+            result.push_back(current);
+            return;
+        }
+
+        for (int i = start; i < n; ++i) {
+            current.push_back(i);
+            backtrack(i + 1, depth + 1);
+            current.pop_back();
+        }
+    };
+
+    backtrack(0, 0);
+    return result;
+}
+
