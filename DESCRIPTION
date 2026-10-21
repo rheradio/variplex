@@ -35,7 +35,8 @@ Description: Computes and analyses the strong binary relationships of a
     represented in the graphs. A companion data set of graphs for 5,709
     models is available at <doi:10.5281/zenodo.17277788>.
 License: MIT + file LICENSE
-URL: https://github.com/rheradio/variplex, https://github.com/rheradio/strong4vm
+URL: https://rheradio.github.io/variplex/, https://github.com/rheradio/variplex,
+    https://github.com/rheradio/strong4vm
 BugReports: https://github.com/rheradio/variplex/issues
 Depends:
     R (>= 4.1.0)
