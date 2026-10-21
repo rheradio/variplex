@@ -6,7 +6,7 @@
 <!-- badges: start -->
 
 [![CRAN
-status](https://www.r-pkg.org/badges/version/variplex)](https://CRAN.R-project.org/package=variplex)
+status](https://img.shields.io/cran/v/variplex)](https://CRAN.R-project.org/package=variplex)
 [![R-CMD-check](https://github.com/rheradio/variplex/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rheradio/variplex/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
