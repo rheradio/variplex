@@ -192,3 +192,25 @@ pick <- function(names) {
     names
   }
 }
+
+# Valgrind puts its own libraries in LD_PRELOAD of the program it runs.
+on_valgrind <- function() {
+  grepl("vgpreload", Sys.getenv("LD_PRELOAD"), fixed = TRUE)
+}
+
+# V8 (used by DiagrammeRsvg to write SVG files) aborts under AddressSanitizer,
+# whose fake stacks break its stack-limit checks; under valgrind, V8, rsvg and
+# the fonts they load report leaks of their own: those checks skip the tests
+# that write drawings with them.
+skip_if_v8_unusable <- function() {
+  makeconf <- file.path(R.home("etc"), "Makeconf")
+  sanitized <- file.exists(makeconf) &&
+    any(grepl("-fsanitize", readLines(makeconf, warn = FALSE), fixed = TRUE))
+  sanitized <- sanitized ||
+    nzchar(Sys.getenv("ASAN_OPTIONS")) ||
+    nzchar(Sys.getenv("UBSAN_OPTIONS"))
+  testthat::skip_if(
+    sanitized || on_valgrind(),
+    "V8 and rsvg do not run cleanly under sanitizers or valgrind"
+  )
+}

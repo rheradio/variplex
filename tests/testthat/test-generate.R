@@ -95,6 +95,12 @@ test_that(
       or_graph = TRUE,
       threads = 1
     ))
+    cnf <- file.path(withr::local_tempdir(), "eleven.cnf")
+    file.copy(vp_example("eleven_options.dimacs"), cnf)
+    expect_identical(suppressWarnings(vp_generate(cnf))$requires, one$requires)
+    # glibc keeps the stacks of finished threads for reuse, which valgrind
+    # reports as possibly lost memory
+    skip_if(on_valgrind(), "threads under valgrind")
     two <- suppressWarnings(vp_generate(
       vp_example("eleven_options.dimacs"),
       or_graph = TRUE,
@@ -103,9 +109,6 @@ test_that(
     expect_identical(one$requires, two$requires)
     expect_identical(one$excludes, two$excludes)
     expect_identical(one$atleastone, two$atleastone)
-    cnf <- file.path(withr::local_tempdir(), "eleven.cnf")
-    file.copy(vp_example("eleven_options.dimacs"), cnf)
-    expect_identical(suppressWarnings(vp_generate(cnf))$requires, one$requires)
   }
 )
 
@@ -264,6 +267,7 @@ test_that("vp_plot() draws with DiagrammeR, or says what to install", {
   )
   expect_error(vp_plot(band, file = "x.jpg"), "must end in")
   skip_if_not_installed("DiagrammeRsvg")
+  skip_if_v8_unusable()
   f <- vp_plot(
     vp_minimal(band),
     file = file.path(withr::local_tempdir(), "band.svg")
