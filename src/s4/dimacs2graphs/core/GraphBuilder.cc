@@ -312,19 +312,24 @@ GraphBuildResult build_graphs(const DimacsFormula& f, const GlobalBackbone& bb,
     } join_all{pool, abort};
     // The system may refuse a thread (a limit on the number of processes, such as ulimit -u or the limits of a
     // container, or no memory for its stack). That is not an error: the run goes on with the threads that
-    // started, or in this thread if none did, and gives the same files (R-TST-18).
+    // started, or in this thread if none did, and gives the same files (R-TST-18). A single worker always runs in
+    // this thread: starting a thread for it gains nothing.
     pool.reserve(threads);
     const auto t_jobs = Clock::now();
     std::string refused;
-    for (auto& w : workers) {
-        try {
-            pool.emplace_back(run, std::ref(w));
-        } catch (const std::exception& e) {
-            refused = e.what();
-            break;
+    if (workers.size() > 1) {
+        for (auto& w : workers) {
+            try {
+                pool.emplace_back(run, std::ref(w));
+            } catch (const std::exception& e) {
+                refused = e.what();
+                break;
+            }
         }
     }
-    if (pool.size() < workers.size()) {
+    if (workers.size() == 1) {
+        run(workers[0]);
+    } else if (pool.size() < workers.size()) {
         r.threads_used = std::max<int>(1, static_cast<int>(pool.size()));
         r.warnings.push_back("the system started " + std::to_string(pool.size()) + " of " + std::to_string(threads) +
                              " threads (" + refused + "); the run goes on with " +

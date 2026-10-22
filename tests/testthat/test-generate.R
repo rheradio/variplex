@@ -266,8 +266,9 @@ test_that("vp_plot() draws with DiagrammeR, or says what to install", {
     "htmlwidget"
   )
   expect_error(vp_plot(band, file = "x.jpg"), "must end in")
-  skip_if_not_installed("DiagrammeRsvg")
+  # before loading DiagrammeRsvg, which starts V8
   skip_if_v8_unusable()
+  skip_if_not_installed("DiagrammeRsvg")
   f <- vp_plot(
     vp_minimal(band),
     file = file.path(withr::local_tempdir(), "band.svg")
