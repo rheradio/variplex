@@ -48,10 +48,7 @@ Only the third kind is a real choice, and only the third kind gets a question to
 |:--|:--|:--|
 | **core**: in every valid configuration | 8 | No. Supposing that it is selected changes nothing, because it always is. Every other feature "requires" it, which tells nothing about the choices you can make. |
 | **dead**: in no valid configuration | 0 | No. It can never be selected, so "suppose it is selected" has no answer. A dead feature is almost always a mistake in the model ([When something is wrong](#sec:wrong)). |
-| **variable**: in some valid configurations and not in others | 11 | **Yes**, one question each: paste0(
-  "suppose this feature is selected: which features must then be selected ",
-  "too, and which can then not be selected at all?"
-) |
+| **variable**: in some valid configurations and not in others | 11 | **Yes**, one question each: "suppose this feature is selected: which features must then be selected too, and which can then not be selected at all?" |
 
 One quick check of all the features at once tells the three kinds apart before the expensive questions start. That
 is why the first run of [Get started](variplex.html) said `Querying 11 variables`: 24 features, of which

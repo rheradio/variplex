@@ -738,12 +738,7 @@ The answer has one row per version, with its `era` (1 to $k$, in time order) and
 
 **Choosing $k$.** $k$ goes from 1 (the whole history) to $n$ (every version its own era), and the total cost can only fall as $k$ grows, so there is no "best" $k$ in the function. Try a few values, as above, and keep the boundaries that persist: the eras for $k + 1$ are computed afresh and need not split those for $k$, so a boundary that survives every $k$ (here between `2008-03` and `2008-04`) is a solid one, and one that appears and disappears is weak. Compare the boundaries with the disruptions and with `vp_history_sizes()`: a boundary at a step where many features were added can come from the new features alone.
 
-**Why it matters.** Eras are the phases of a product linepaste0(
-  's life: before and after a reorganisation, a new architecture, a change ',
-  'of maintainers. They tell which versions can be compared directly, which ',
-  'statistics should be computed per era, and where to look for the decision ',
-  'that changed the model'
-)s course.
+**Why it matters.** Eras are the phases of a product line's life: before and after a reorganisation, a new architecture, a change of maintainers. They tell which versions can be compared directly, which statistics should be computed per era, and where to look for the decision that changed the model's course.
 
 ::: {.vp-box .vp-limitsbox}
 **Limits: what this cannot tell you**

@@ -1,5 +1,6 @@
 #' variplex: analysis of strong dependency and conflict graphs of variability models
 #'
+#' \if{html}{\figure{logo.svg}{options: style='float: right' alt='variplex logo' width='120'}}
 #' variplex computes, for a variability model, every relationship between two
 #' features that holds in all its valid configurations, and analyses the
 #' resulting graphs.

@@ -1,38 +1,37 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# variplex
+# <img src="man/figures/variplex-wordmark.svg" alt="variplex" height="48"/> <img src="man/figures/logo.svg" align="right" height="139" alt="variplex logo"/>
 
 <!-- badges: start -->
 
-[![CRAN
-status](https://img.shields.io/cran/v/variplex)](https://CRAN.R-project.org/package=variplex)
 [![R-CMD-check](https://github.com/rheradio/variplex/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rheradio/variplex/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-variplex computes, for a variability model, every relationship between
-two features that holds in all its valid configurations, and analyses
-the resulting graphs from R:
+variplex does two things for engineers who work with variability models:
 
-- **requires**: every valid configuration with A also has B;
-- **excludes**: no valid configuration has both A and B;
-- **at least one**: no valid configuration lacks both.
+1.  **It builds the graphs.** For a variability model, variplex computes
+    every relationship between two features that holds in all its valid
+    configurations:
 
-The model can be a feature model in
-[UVL](https://universal-variability-language.github.io/), or the Boolean
-formula (DIMACS) of a model written in any other notation, such as the
-Kconfig files of the Linux kernel translated by KMax, KConfigReader or
-KconfigSampler. A SAT solver finds the relationships once; then more
-than a hundred functions answer questions about them without a solver,
-and return tibbles: what each feature weighs, how the model is layered,
-where its conflicts come from, which features can go together, how much
-of the model a test sample covers, which patterns recur, and how the
-model changes from version to version.
+    - **requires**: every valid configuration with A also has B;
+    - **excludes**: no valid configuration has both A and B;
+    - **at least one**: no valid configuration lacks both.
 
-variplex brings together the engine of
-[Strong4VM](https://github.com/rheradio/strong4vm) (C++, compiled into
-the package with the SAT solver Glucose) and its R functions, which were
-named `sg_*` and are now `vp_*`.
+    The model can be a feature model in
+    [UVL](https://universal-variability-language.github.io/), or the
+    Boolean formula (DIMACS) of a model written in any other notation,
+    such as the Kconfig files of the Linux kernel translated by KMax,
+    KConfigReader or KconfigSampler. The graphs are synthesized once
+    using a SAT solver and an auxiliary graph called Modal Implication
+    Graph (MIG).
+
+2.  **It analyses the graphs.** More than a hundred functions answer
+    questions about them without calling a solver again, and return
+    tibbles: what each feature weighs, how the model is layered, where
+    its conflicts come from, which features can go together, how much of
+    the model a test sample covers, which patterns recur, and how the
+    model changes from version to version.
 
 ## Installation
 
@@ -92,22 +91,6 @@ vp_can_go_together(
 vp_plot(vp_minimal(band))                          # with DiagrammeR
 ```
 
-## From the command line of Strong4VM to R
-
-| `strong4vm`                                      | variplex                                                                         |
-|:-------------------------------------------------|:---------------------------------------------------------------------------------|
-| `strong4vm model.uvl -o out --or-graph --kernel` | `vp_generate("model.uvl", output_dir = "out", or_graph = TRUE, kernel = TRUE)`   |
-| `strong4vm formula.dimacs --classify-only`       | `vp_classify("formula.dimacs")`                                                  |
-| `strong4vm check out/model`                      | `vp_check(vp_read("out/model"))`                                                 |
-| `strong4vm expand out/model`                     | `vp_expand(vp_read("out/model", form = "minimal"))`                              |
-| `strong4vm explain out/model --conflict A B`     | `vp_explain_conflict(model, "A", "B")`                                           |
-| `strong4vm explain out/model --requires A B`     | `vp_explain_requires(model, "A", "B")`                                           |
-| `strong4vm diff old new`                         | `vp_compare(old, new)`, `vp_changed_links(old, new)`, `vp_state_moves(old, new)` |
-| `strong4vm diff --rename FILE old new`           | `vp_compare(vp_rename(old, FILE), new)`                                          |
-
-Every option of `strong4vm generate` is an argument of `vp_generate()`;
-`?vp_generate` lists them.
-
 ## Documentation
 
 Start with `vignette("variplex")`. The other vignettes go through the
@@ -125,5 +108,4 @@ graphs say is true; a “yes” to a long wish list can still be wrong.
 ## Citation
 
 `citation("variplex")`. The dataset of graphs of 5,709 variability
-models made with Strong4VM is at
-<https://doi.org/10.5281/zenodo.17277788>.
+models is at <https://doi.org/10.5281/zenodo.17277788>.
