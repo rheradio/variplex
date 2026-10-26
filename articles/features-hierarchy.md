@@ -499,10 +499,9 @@ the hub are least likely to know who depends on it.
 **`harmonic`: how much a feature drags in, the near counting more.**
 `closeness_out` answers “how far away, on average, are the
 requirements?”; it does not care how many there are. The harmonic
-centrality answers a different question: paste0( “how much does
-selecting the feature drag in, if a direct requirement”, “counts fully
-and a far one counts less?” ). Its first two steps are those of
-`closeness_out`:
+centrality answers a different question: “how much does selecting the
+feature drag in, if a direct requirement counts fully and a far one
+counts less?”. Its first two steps are those of `closeness_out`:
 
 1.  In the skeleton, list every node that the feature reaches (its
     requirements; an atomic set counts once).

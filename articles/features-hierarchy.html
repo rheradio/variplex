@@ -66,8 +66,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-
-      <h1>Features, hierarchy and the whole model</h1>
+      <img src="../logo.svg" class="logo" alt=""><h1>Features, hierarchy and the whole model</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/rheradio/variplex/blob/main/vignettes/features-hierarchy.Rmd" class="external-link"><code>vignettes/features-hierarchy.Rmd</code></a></small>
@@ -774,10 +773,10 @@ those who change the hub are least likely to know who depends on it.</p>
 <p><strong><code>harmonic</code>: how much a feature drags in, the near
 counting more.</strong> <code>closeness_out</code> answers “how far
 away, on average, are the requirements?”; it does not care how many
-there are. The harmonic centrality answers a different question: paste0(
-“how much does selecting the feature drag in, if a direct requirement”,
-“counts fully and a far one counts less?” ). Its first two steps are
-those of <code>closeness_out</code>:</p>
+there are. The harmonic centrality answers a different question: “how
+much does selecting the feature drag in, if a direct requirement counts
+fully and a far one counts less?”. Its first two steps are those of
+<code>closeness_out</code>:</p>
 <ol style="list-style-type: decimal">
 <li><p>In the skeleton, list every node that the feature reaches (its
 requirements; an atomic set counts once).</p></li>

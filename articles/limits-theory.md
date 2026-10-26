@@ -1425,10 +1425,10 @@ $`\delta`$ from a literal $`w`$ of $`\omega`$ or from a clause of one
 literal, and resolution, which derives $`\lnot w \lor x`$ from
 $`\lnot w \lor y`$ and $`\lnot y \lor x`$, gives
 $`\delta \vDash \lnot w \lor x`$ (or $`\delta \vDash x`$). Suppose that
-a clause \$\ell \lor \ellpaste0( '\$ of $`\delta`$ ends with all its
-literals false (a clause of one literal ’, ’is the case $`\ell = \ell'
-)`$): $`\lnot\ell`$ was reached from $`w_1`$ and $`\lnot\ell'`$ from
-$`w_2`$, and two more resolutions with $`\ell \lor \ell'`$ give
+a clause $`\ell \lor \ell'`$ of $`\delta`$ ends with all its literals
+false (a clause of one literal is the case $`\ell = \ell'`$):
+$`\lnot\ell`$ was reached from $`w_1`$ and $`\lnot\ell'`$ from $`w_2`$,
+and two more resolutions with $`\ell \lor \ell'`$ give
 $`\delta \vDash \lnot w_1 \lor \lnot w_2`$ (a single literal, or no
 literal at all, when a chain started from a clause of one literal). By
 Theorem 1, $`\varphi`$ implies that clause too, and by the proof of

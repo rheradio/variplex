@@ -1233,11 +1233,11 @@ with the disruptions and with
 a boundary at a step where many features were added can come from the
 new features alone.
 
-**Why it matters.** Eras are the phases of a product linepaste0( ‘s
-life: before and after a reorganisation, a new architecture, a change’,
-‘of maintainers. They tell which versions can be compared directly,
-which’, ‘statistics should be computed per era, and where to look for
-the decision’, ‘that changed the model’ )s course.
+**Why it matters.** Eras are the phases of a product line’s life: before
+and after a reorganisation, a new architecture, a change of maintainers.
+They tell which versions can be compared directly, which statistics
+should be computed per era, and where to look for the decision that
+changed the model’s course.
 
 **Limits: what this cannot tell you**
 

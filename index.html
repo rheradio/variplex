@@ -12,6 +12,7 @@
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Analysis of Strong Dependency and Conflict Graphs of Variability Models">
 <meta name="description" content="Computes and analyses the strong binary relationships of a variability model (a feature model, or the configuration space of a system such as the Linux kernel): which features require others, which exclude each other and of which pairs at least one must be selected, in every valid configuration. Models are read in the Universal Variability Language (UVL) or as Boolean formulas in DIMACS format, such as those that KMax, KConfigReader, KconfigSampler or TraVarT produce from other notations. A satisfiability solver (Glucose) finds the relationships; the resulting graphs are written as Pajek files and analysed with more than one hundred functions that return tibbles: atomic sets, hierarchy, conflicts, configuration and team planning, combinatorial testing, network patterns and the evolution of a model through its versions. Rules that involve three or more features at once are not represented in the graphs. A companion data set of graphs for 5,709 models is available at &lt;doi:10.5281/zenodo.17277788&gt;.">
 <meta property="og:description" content="Computes and analyses the strong binary relationships of a variability model (a feature model, or the configuration space of a system such as the Linux kernel): which features require others, which exclude each other and of which pairs at least one must be selected, in every valid configuration. Models are read in the Universal Variability Language (UVL) or as Boolean formulas in DIMACS format, such as those that KMax, KConfigReader, KconfigSampler or TraVarT produce from other notations. A satisfiability solver (Glucose) finds the relationships; the resulting graphs are written as Pajek files and analysed with more than one hundred functions that return tibbles: atomic sets, hierarchy, conflicts, configuration and team planning, combinatorial testing, network patterns and the evolution of a model through its versions. Rules that involve three or more features at once are not represented in the graphs. A companion data set of graphs for 5,709 models is available at &lt;doi:10.5281/zenodo.17277788&gt;.">
+<meta property="og:image" content="https://rheradio.github.io/variplex/logo.svg">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -64,11 +65,17 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="variplex">variplex<a class="anchor" aria-label="anchor" href="#variplex"></a>
-</h1></div>
+<div class="page-header">
+<img src="logo.svg" class="logo" alt=""><h1 id="id_-">
+<img src="reference/figures/variplex-wordmark.svg" alt="variplex" height="48"><a class="anchor" aria-label="anchor" href="#id_-"></a>
+</h1>
+</div>
 <!-- badges: start -->
 
-<p>variplex computes, for a variability model, every relationship between two features that holds in all its valid configurations, and analyses the resulting graphs from R:</p>
+<p>variplex does two things for engineers who work with variability models:</p>
+<ol style="list-style-type: decimal">
+<li>
+<p><strong>It builds the graphs.</strong> For a variability model, variplex computes every relationship between two features that holds in all its valid configurations:</p>
 <ul>
 <li>
 <strong>requires</strong>: every valid configuration with A also has B;</li>
@@ -77,8 +84,10 @@
 <li>
 <strong>at least one</strong>: no valid configuration lacks both.</li>
 </ul>
-<p>The model can be a feature model in <a href="https://universal-variability-language.github.io/" class="external-link">UVL</a>, or the Boolean formula (DIMACS) of a model written in any other notation, such as the Kconfig files of the Linux kernel translated by KMax, KConfigReader or KconfigSampler. A SAT solver finds the relationships once; then more than a hundred functions answer questions about them without a solver, and return tibbles: what each feature weighs, how the model is layered, where its conflicts come from, which features can go together, how much of the model a test sample covers, which patterns recur, and how the model changes from version to version.</p>
-<p>variplex brings together the engine of <a href="https://github.com/rheradio/strong4vm" class="external-link">Strong4VM</a> (C++, compiled into the package with the SAT solver Glucose) and its R functions, which were named <code>sg_*</code> and are now <code>vp_*</code>.</p>
+<p>The model can be a feature model in <a href="https://universal-variability-language.github.io/" class="external-link">UVL</a>, or the Boolean formula (DIMACS) of a model written in any other notation, such as the Kconfig files of the Linux kernel translated by KMax, KConfigReader or KconfigSampler. The graphs are synthesized once using a SAT solver and an auxiliary graph called Modal Implication Graph (MIG).</p>
+</li>
+<li><p><strong>It analyses the graphs.</strong> More than a hundred functions answer questions about them without calling a solver again, and return tibbles: what each feature weighs, how the model is layered, where its conflicts come from, which features can go together, how much of the model a test sample covers, which patterns recur, and how the model changes from version to version.</p></li>
+</ol>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -131,57 +140,6 @@
 <code class="sourceCode R"><span><span class="fu"><a href="reference/vp_plot.html">vp_plot</a></span><span class="op">(</span><span class="fu"><a href="reference/vp_minimal.html">vp_minimal</a></span><span class="op">(</span><span class="va">band</span><span class="op">)</span><span class="op">)</span>                          <span class="co"># with DiagrammeR</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="from-the-command-line-of-strong4vm-to-r">From the command line of Strong4VM to R<a class="anchor" aria-label="anchor" href="#from-the-command-line-of-strong4vm-to-r"></a>
-</h2>
-<table class="table">
-<colgroup>
-<col width="37%">
-<col width="62%">
-</colgroup>
-<thead><tr>
-<th align="left"><code>strong4vm</code></th>
-<th align="left">variplex</th>
-</tr></thead>
-<tbody>
-<tr>
-<td align="left"><code>strong4vm model.uvl -o out --or-graph --kernel</code></td>
-<td align="left"><code>vp_generate("model.uvl", output_dir = "out", or_graph = TRUE, kernel = TRUE)</code></td>
-</tr>
-<tr>
-<td align="left"><code>strong4vm formula.dimacs --classify-only</code></td>
-<td align="left"><code>vp_classify("formula.dimacs")</code></td>
-</tr>
-<tr>
-<td align="left"><code>strong4vm check out/model</code></td>
-<td align="left"><code>vp_check(vp_read("out/model"))</code></td>
-</tr>
-<tr>
-<td align="left"><code>strong4vm expand out/model</code></td>
-<td align="left"><code>vp_expand(vp_read("out/model", form = "minimal"))</code></td>
-</tr>
-<tr>
-<td align="left"><code>strong4vm explain out/model --conflict A B</code></td>
-<td align="left"><code>vp_explain_conflict(model, "A", "B")</code></td>
-</tr>
-<tr>
-<td align="left"><code>strong4vm explain out/model --requires A B</code></td>
-<td align="left"><code>vp_explain_requires(model, "A", "B")</code></td>
-</tr>
-<tr>
-<td align="left"><code>strong4vm diff old new</code></td>
-<td align="left">
-<code>vp_compare(old, new)</code>, <code>vp_changed_links(old, new)</code>, <code>vp_state_moves(old, new)</code>
-</td>
-</tr>
-<tr>
-<td align="left"><code>strong4vm diff --rename FILE old new</code></td>
-<td align="left"><code>vp_compare(vp_rename(old, FILE), new)</code></td>
-</tr>
-</tbody>
-</table>
-<p>Every option of <code>strong4vm generate</code> is an argument of <code><a href="reference/vp_generate.html">vp_generate()</a></code>; <code><a href="reference/vp_generate.html">?vp_generate</a></code> lists them.</p>
-</div>
-<div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h2>
 <p>Start with <code><a href="articles/variplex.html">vignette("variplex")</a></code>. The other vignettes go through the results (<code><a href="articles/graphs.html">vignette("graphs")</a></code>) and every question the graphs answer, topic by topic; <code><a href="reference/vp_functions.html">vp_functions()</a></code> lists the functions by topic.</p>
@@ -194,7 +152,7 @@
 <div class="section level2">
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
-<p><code>citation("variplex")</code>. The dataset of graphs of 5,709 variability models made with Strong4VM is at <a href="https://doi.org/10.5281/zenodo.17277788" class="external-link uri">https://doi.org/10.5281/zenodo.17277788</a>.</p>
+<p><code>citation("variplex")</code>. The dataset of graphs of 5,709 variability models is at <a href="https://doi.org/10.5281/zenodo.17277788" class="external-link uri">https://doi.org/10.5281/zenodo.17277788</a>.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
@@ -232,7 +190,6 @@
 <div class="dev-status">
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
-<li><a href="https://CRAN.R-project.org/package=variplex" class="external-link"><img src="https://img.shields.io/cran/v/variplex" alt="CRAN status"></a></li>
 <li><a href="https://github.com/rheradio/variplex/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/rheradio/variplex/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
 </ul>
 </div>
