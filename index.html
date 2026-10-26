@@ -72,22 +72,108 @@
 </div>
 <!-- badges: start -->
 
-<p>variplex does two things for engineers who work with variability models:</p>
+<p>A variability model lists the features that a configurable system offers and the constraints among them. Constraints combine: if a feature requires a second one, and the second excludes a third, then the first also excludes the third, although nobody wrote so. In large models, most relationships between features are written nowhere, yet engineers who plan changes, review models, validate configurations or test releases depend on them.</p>
+<p>variplex makes these relationships explicit, in two steps:</p>
 <ol style="list-style-type: decimal">
 <li>
-<p><strong>It builds the graphs.</strong> For a variability model, variplex computes every relationship between two features that holds in all its valid configurations:</p>
+<strong>It builds the graphs.</strong> variplex compiles a model, once, into graphs of its <em>strong relationships</em>: every relationship between two features that holds in all the valid configurations, written in the model or not.</li>
+<li>
+<strong>It analyses the graphs.</strong> More than a hundred functions answer the questions that engineers ask about a model, from one feature to the whole model and its versions, without calling a solver again. Every function returns a tibble.</li>
+</ol>
+<div class="section level2">
+<h2 id="what-the-graphs-are">What the graphs are<a class="anchor" aria-label="anchor" href="#what-the-graphs-are"></a>
+</h2>
+<p>For two features A and B of a model, variplex finds three kinds of strong relationships, each a graph:</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="10%">
+<col width="64%">
+</colgroup>
+<thead><tr>
+<th align="left">Graph</th>
+<th align="left">Link</th>
+<th align="left">Meaning</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left"><strong>requires</strong></td>
+<td align="left">A → B</td>
+<td align="left">every valid configuration with A also has B</td>
+</tr>
+<tr>
+<td align="left"><strong>excludes</strong></td>
+<td align="left">A — B</td>
+<td align="left">no valid configuration has both A and B</td>
+</tr>
+<tr>
+<td align="left"><strong>at least one</strong></td>
+<td align="left">A ⋯ B</td>
+<td align="left">no valid configuration lacks both</td>
+</tr>
+</tbody>
+</table>
+<p>The nodes are the <em>variable</em> features, those in some valid configurations and not in others. <em>Core</em> features, in every configuration, and <em>dead</em> ones, in none, are reported apart; abstract features, which only name groups of the tree, are left out.</p>
+<p>Take the Mi Band 3, a fitness band that comes with the package. Its feature model is a tree with five cross-tree constraints; it has 8 core features and 11 variable ones. Its graphs have 21 dependencies, 10 conflicts and 3 at-least-one links, and only 11 of these 34 links are written in the model as a tree edge, a group or a constraint between two features. The others arise as constraints combine. For instance, every band with Bluetooth 4.2 has a heart-rate sensor, yet no constraint says so: it follows from a constraint over three features, the Bluetooth group and a constraint on a fourth one.</p>
+<p><img src="reference/figures/README-graphs.svg" alt="The three graphs of the Mi Band 3" width="100%"></p>
+<p><em>The graphs of the Mi Band 3: requires (blue arrows), excludes (red dashes) and at least one (green dots). Screen, OLED and CapacityButton, always selected together, are one node.</em></p>
+<p>Because each link joins just two features, the graphs are <strong>plain graphs</strong>, which pays off twice:</p>
 <ul>
 <li>
-<strong>requires</strong>: every valid configuration with A also has B;</li>
+<strong>Engineers can read them.</strong> Each link is one simple fact that can be drawn and checked against the requirements. The readings are immediate: Screen, OLED and CapacityButton are the most required features; BT40 is the most incompatible, excluding 7 features; MovementFilter forces 4 features and forbids 3.</li>
 <li>
-<strong>excludes</strong>: no valid configuration has both A and B;</li>
-<li>
-<strong>at least one</strong>: no valid configuration lacks both.</li>
+<strong>Graph algorithms apply to them.</strong> Centrality finds the features on which most others depend, communities the parts of a model that separate teams could configure, and paths explain why two features cannot go together. Unlike a drawing, these analyses scale to models with thousands of features, such as the Kconfig models of Linux. <code><a href="reference/vp_igraph.html">vp_igraph()</a></code> hands the graphs to igraph for any other algorithm.</li>
 </ul>
-<p>The model can be a feature model in <a href="https://universal-variability-language.github.io/" class="external-link">UVL</a>, or the Boolean formula (DIMACS) of a model written in any other notation, such as the Kconfig files of the Linux kernel translated by KMax, KConfigReader or KconfigSampler. The graphs are synthesized once using a SAT solver and an auxiliary graph called Modal Implication Graph (MIG).</p>
-</li>
-<li><p><strong>It analyses the graphs.</strong> More than a hundred functions answer questions about them without calling a solver again, and return tibbles: what each feature weighs, how the model is layered, where its conflicts come from, which features can go together, how much of the model a test sample covers, which patterns recur, and how the model changes from version to version.</p></li>
-</ol>
+<p>The graphs are synthesized once using a SAT solver and an auxiliary graph called Modal Implication Graph (MIG), which takes seconds to minutes even on the largest models. The model can be a feature model in <a href="https://universal-variability-language.github.io/" class="external-link">UVL</a>, or the Boolean formula (DIMACS) of a model written in any other notation, such as the Kconfig files of the Linux kernel translated by KMax, KConfigReader or KconfigSampler.</p>
+</div>
+<div class="section level2">
+<h2 id="what-the-graphs-answer">What the graphs answer<a class="anchor" aria-label="anchor" href="#what-the-graphs-answer"></a>
+</h2>
+<p>Once the graphs are built, most questions become lookups or classic graph algorithms. Four everyday engineering tasks show the idea:</p>
+<table class="table">
+<colgroup>
+<col width="14%">
+<col width="51%">
+<col width="34%">
+</colgroup>
+<thead><tr>
+<th align="left">Task</th>
+<th align="left">Question</th>
+<th align="left">Functions</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left">Impact analysis</td>
+<td align="left">What does selecting or removing a feature force and forbid?</td>
+<td align="left">
+<code><a href="reference/vp_consequences.html">vp_consequences()</a></code>, <code><a href="reference/vp_requirements.html">vp_requirements()</a></code>, <code><a href="reference/vp_conflicts_of.html">vp_conflicts_of()</a></code>
+</td>
+</tr>
+<tr>
+<td align="left">Model review</td>
+<td align="left">From which few relationships do all the others follow? Why does a dependency or conflict hold?</td>
+<td align="left">
+<code><a href="reference/vp_minimal.html">vp_minimal()</a></code>, <code><a href="reference/vp_explain_requires.html">vp_explain_requires()</a></code>, <code><a href="reference/vp_explain_conflict.html">vp_explain_conflict()</a></code>
+</td>
+</tr>
+<tr>
+<td align="left">Configuration validation</td>
+<td align="left">Can these decisions go together? If not, why?</td>
+<td align="left">
+<code><a href="reference/vp_partial_configuration.html">vp_partial_configuration()</a></code>, <code><a href="reference/vp_can_go_together.html">vp_can_go_together()</a></code>
+</td>
+</tr>
+<tr>
+<td align="left">Release and test management</td>
+<td align="left">What did a release change in meaning, not just in text? Which pairs of features must be retested?</td>
+<td align="left">
+<code><a href="reference/vp_compare.html">vp_compare()</a></code>, <code><a href="reference/vp_changed_links.html">vp_changed_links()</a></code>, <code><a href="reference/vp_edit_type.html">vp_edit_type()</a></code>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Beyond them, the functions cover the measures of each feature, the layers and hierarchy of a model, the whole model, conflicts, configuration and teams, combinatorial testing, network patterns, and the evolution of a model through its versions. <code><a href="reference/vp_functions.html">vp_functions()</a></code> lists them by topic.</p>
+</div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -101,6 +187,7 @@
 <div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
 </h2>
+<p>Build the graphs of the Mi Band 3:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rheradio.github.io/variplex/">variplex</a></span><span class="op">)</span></span>
 <span></span>
@@ -110,44 +197,70 @@
 <span><span class="co">#&gt;   features: 11 variable (the nodes of the graphs), 8 core, 0 dead</span></span>
 <span><span class="co">#&gt;   requires: 21 arrows   excludes: 10 lines</span></span>
 <span><span class="co">#&gt;   at least one: 3 lines</span></span>
-<span><span class="co">#&gt;   atomic sets: 1 (of two or more features)</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/vp_requirements.html">vp_requirements</a></span><span class="op">(</span><span class="va">band</span>, <span class="st">"TouchScreen"</span><span class="op">)</span> <span class="co"># what the touch screen brings along</span></span>
-<span><span class="co">#&gt; # A tibble: 3 x 1</span></span>
-<span><span class="co">#&gt;   feature       </span></span>
-<span><span class="co">#&gt;   &lt;chr&gt;         </span></span>
-<span><span class="co">#&gt; 1 Screen        </span></span>
-<span><span class="co">#&gt; 2 OLED          </span></span>
-<span><span class="co">#&gt; 3 CapacityButton</span></span>
-<span><span class="co"># why two features never go together</span></span>
+<span><span class="co">#&gt;   atomic sets: 1 (of two or more features)</span></span></code></pre></div>
+<p><strong>Impact analysis.</strong> A cheaper band without a screen is planned. What does it touch? Besides the features under the screen in the tree, it loses both versions of Bluetooth Low Energy, and must use classic Bluetooth:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/vp_consequences.html">vp_consequences</a></span><span class="op">(</span><span class="va">band</span>, deselected <span class="op">=</span> <span class="st">"Screen"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 8 x 3</span></span>
+<span><span class="co">#&gt;   feature        value    forced_by </span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;    &lt;chr&gt;     </span></span>
+<span><span class="co">#&gt; 1 Screen         left out not Screen</span></span>
+<span><span class="co">#&gt; 2 TouchScreen    left out not Screen</span></span>
+<span><span class="co">#&gt; 3 OLED           left out not Screen</span></span>
+<span><span class="co">#&gt; 4 CapacityButton left out not Screen</span></span>
+<span><span class="co">#&gt; 5 MovementFilter left out not Screen</span></span>
+<span><span class="co">#&gt; 6 BLEv40         left out not Screen</span></span>
+<span><span class="co">#&gt; 7 BLEv42         left out not Screen</span></span>
+<span><span class="co">#&gt; 8 BT40           selected not Screen</span></span></code></pre></div>
+<p><strong>Model review.</strong> The minimal form keeps the few links from which all the others follow, each through a path, so that a review can start from them; the explanations trace any link back to them:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/vp_minimal.html">vp_minimal</a></span><span class="op">(</span><span class="va">band</span><span class="op">)</span></span>
+<span><span class="co">#&gt; variplex model "miband3_realized"</span></span>
+<span><span class="co">#&gt;   features: 9 variable (the nodes of the graphs), 8 core, 0 dead</span></span>
+<span><span class="co">#&gt;   requires: 6 arrows   excludes: 3 lines</span></span>
+<span><span class="co">#&gt;   at least one: 1 lines</span></span>
+<span><span class="co">#&gt;   minimal form: skeleton, primitive conflicts and primitive at-least-one lines;</span></span>
+<span><span class="co">#&gt;   each atomic set is one node (1 sets)</span></span>
 <span><span class="fu"><a href="reference/vp_explain_conflict.html">vp_explain_conflict</a></span><span class="op">(</span><span class="va">band</span>, <span class="st">"MovementFilter"</span>, <span class="st">"BT40"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; # A tibble: 3 x 5</span></span>
 <span><span class="co">#&gt;   origin  step from           link     to    </span></span>
 <span><span class="co">#&gt;    &lt;int&gt; &lt;int&gt; &lt;chr&gt;          &lt;chr&gt;    &lt;chr&gt; </span></span>
 <span><span class="co">#&gt; 1      1     1 MovementFilter requires BLEv40</span></span>
 <span><span class="co">#&gt; 2      1     2 BLEv40         requires Screen</span></span>
-<span><span class="co">#&gt; 3      1     3 Screen         excludes BT40</span></span>
-<span><span class="fu"><a href="reference/vp_can_go_together.html">vp_can_go_together</a></span><span class="op">(</span></span>
-<span>  <span class="va">band</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TouchScreen"</span>, <span class="st">"HeartRateSensor"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TouchScreen"</span>, <span class="st">"BT40"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; # A tibble: 2 x 3</span></span>
-<span><span class="co">#&gt;   wish                         possible reasons                                          </span></span>
-<span><span class="co">#&gt;   &lt;chr&gt;                        &lt;lgl&gt;    &lt;chr&gt;                                            </span></span>
-<span><span class="co">#&gt; 1 TouchScreen, HeartRateSensor TRUE     ""                                               </span></span>
-<span><span class="co">#&gt; 2 TouchScreen, BT40            FALSE    "TouchScreen (which brings Screen) excludes BT40"</span></span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/vp_plot.html">vp_plot</a></span><span class="op">(</span><span class="fu"><a href="reference/vp_minimal.html">vp_minimal</a></span><span class="op">(</span><span class="va">band</span><span class="op">)</span><span class="op">)</span>                          <span class="co"># with DiagrammeR</span></span></code></pre></div>
+<span><span class="co">#&gt; 3      1     3 Screen         excludes BT40</span></span></code></pre></div>
+<p><img src="reference/figures/README-minimal.svg" alt="The minimal form of the graphs of the Mi Band 3" width="100%"></p>
+<p><strong>Configuration validation.</strong> A customer orders a band with a movement filter and Bluetooth 4.2. It cannot be built, and the graphs say why:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/vp_can_go_together.html">vp_can_go_together</a></span><span class="op">(</span><span class="va">band</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"MovementFilter"</span>, <span class="st">"BLEv42"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">reasons</span></span>
+<span><span class="co">#&gt; [1] "MovementFilter excludes BLEv42 (which brings HeartRateSensor); MovementFilter (which brings BLEv40) excludes BLEv42"</span></span></code></pre></div>
+<p><strong>Release and test management.</strong> The model planned before the release had fewer constraints than the released one. The release only gained links, so it restricted the model; each gained link rules out a pair of decisions, so those pairs no longer need testing:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">planned</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vp_generate.html">vp_generate</a></span><span class="op">(</span><span class="fu"><a href="reference/vp_example.html">vp_example</a></span><span class="op">(</span><span class="st">"miband3_planned.uvl"</span><span class="op">)</span>, or_graph <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/vp_compare.html">vp_compare</a></span><span class="op">(</span><span class="va">planned</span>, <span class="va">band</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 3 x 10</span></span>
+<span><span class="co">#&gt;   graph       kept added removed old_links new_links gained  lost jaccard spearman</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;      &lt;int&gt; &lt;int&gt;   &lt;int&gt;     &lt;int&gt;     &lt;int&gt;  &lt;int&gt; &lt;int&gt;   &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 requires      11     0       0        10        21     11     0   0.476    0.867</span></span>
+<span><span class="co">#&gt; 2 excludes      11     0       0         3        10      7     0   0.3     NA    </span></span>
+<span><span class="co">#&gt; 3 atleastone    11     0       0         0         3      3     0   0       NA</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/vp_plot.html">vp_plot</a></span><span class="op">(</span><span class="va">band</span><span class="op">)</span>                                      <span class="co"># draw the graphs, with DiagrammeR</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="how-far-the-graphs-can-be-trusted">How far the graphs can be trusted<a class="anchor" aria-label="anchor" href="#how-far-the-graphs-can-be-trusted"></a>
+</h2>
+<p>The graphs know everything that can be said about pairs of features, and nothing more:</p>
+<ul>
+<li>Every answer about one or two features (is it core? does A require B? can A and B go together?) is <strong>exact</strong>.</li>
+<li>When a question involves more features, such as whether a partial configuration can be completed, a <strong>“no” is always right</strong>, and it comes with its cause.</li>
+<li>A <strong>“yes” can be wrong</strong>, though rarely: a rule that ties three or more features at once without forcing anything on any two of them is in no graph. If a battery cannot power NFC, the heart-rate sensor and the touch screen at once, the graphs stay the same, and they accept the three together.</li>
+</ul>
+<p><code><a href="articles/limits-theory.html">vignette("limits-theory")</a></code> proves these guarantees and measures how often a “yes” is wrong on real models.</p>
 </div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h2>
 <p>Start with <code><a href="articles/variplex.html">vignette("variplex")</a></code>. The other vignettes go through the results (<code><a href="articles/graphs.html">vignette("graphs")</a></code>) and every question the graphs answer, topic by topic; <code><a href="reference/vp_functions.html">vp_functions()</a></code> lists the functions by topic.</p>
-</div>
-<div class="section level2">
-<h2 id="what-the-graphs-cannot-see">What the graphs cannot see<a class="anchor" aria-label="anchor" href="#what-the-graphs-cannot-see"></a>
-</h2>
-<p>The graphs hold relationships between <strong>two</strong> features. A rule that ties three or more features at once (“A requires B or C”) is in no graph, unless it implies a relationship between two of them. Everything the graphs say is true; a “yes” to a long wish list can still be wrong. <code><a href="articles/limits-theory.html">vignette("limits-theory")</a></code> explains it, measures it and proves it.</p>
 </div>
 <div class="section level2">
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
