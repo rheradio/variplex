@@ -42,12 +42,18 @@ The nodes are the *variable* features, those in some valid configurations and no
 configuration, and *dead* ones, in none, are reported apart; abstract features, which only name groups of the tree,
 are left out.
 
-Take the Mi Band 3, a fitness band that comes with the package. Its feature model is a tree with five cross-tree
+Take the Mi Band 3, a fitness band that comes with the package. Its
+[feature model](https://github.com/rheradio/variplex/blob/main/inst/extdata/miband3_realized.uvl) is a tree with five cross-tree
 constraints; it has 8 core features and 11 variable ones. Its graphs have 21 dependencies, 10 conflicts and 3
 at-least-one links, and only 11 of these 34 links are written in the model as a tree edge, a group or a constraint
 between two features. The others arise as constraints combine. For instance, every band with Bluetooth 4.2 has a
 heart-rate sensor, yet no constraint says so: it follows from a constraint over three features, the Bluetooth group
 and a constraint on a fourth one.
+
+<img src="man/figures/README-miband3-model.svg" alt="The feature model of the Mi Band 3" width="100%"/>
+
+*The feature model of the Mi Band 3: a tree of mandatory, optional and alternative features, and five cross-tree
+constraints (c1 to c5). Core features are shaded; five of them are grouped in one box.*
 
 ```{r graphs-figure, include = FALSE}
 library(variplex)
