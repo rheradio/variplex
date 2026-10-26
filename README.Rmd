@@ -167,6 +167,16 @@ The graphs know everything that can be said about pairs of features, and nothing
 
 `vignette("limits-theory")` proves these guarantees and measures how often a "yes" is wrong on real models.
 
+## Built on
+
+variplex is built upon two tools developed by Rubén Heradio and colleagues:
+
+- [Strong4VM](https://github.com/rheradio/strong4vm), which extracts the graphs of strong relationships from a
+  variability model ([Heradio et al., 2026](https://doi.org/10.1016/j.softx.2026.102663));
+- BoneDigger, a backbone solver, which finds the literals that hold in every valid configuration of a model.
+
+Their C++ code, with the SAT solver Glucose, is compiled into the package, so nothing has to be installed outside R.
+
 ## Documentation
 
 Start with `vignette("variplex")`. The other vignettes go through the results (`vignette("graphs")`) and every
