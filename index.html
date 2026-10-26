@@ -114,7 +114,9 @@
 </tbody>
 </table>
 <p>The nodes are the <em>variable</em> features, those in some valid configurations and not in others. <em>Core</em> features, in every configuration, and <em>dead</em> ones, in none, are reported apart; abstract features, which only name groups of the tree, are left out.</p>
-<p>Take the Mi Band 3, a fitness band that comes with the package. Its feature model is a tree with five cross-tree constraints; it has 8 core features and 11 variable ones. Its graphs have 21 dependencies, 10 conflicts and 3 at-least-one links, and only 11 of these 34 links are written in the model as a tree edge, a group or a constraint between two features. The others arise as constraints combine. For instance, every band with Bluetooth 4.2 has a heart-rate sensor, yet no constraint says so: it follows from a constraint over three features, the Bluetooth group and a constraint on a fourth one.</p>
+<p>Take the Mi Band 3, a fitness band that comes with the package. Its <a href="https://github.com/rheradio/variplex/blob/main/inst/extdata/miband3_realized.uvl" class="external-link">feature model</a> is a tree with five cross-tree constraints; it has 8 core features and 11 variable ones. Its graphs have 21 dependencies, 10 conflicts and 3 at-least-one links, and only 11 of these 34 links are written in the model as a tree edge, a group or a constraint between two features. The others arise as constraints combine. For instance, every band with Bluetooth 4.2 has a heart-rate sensor, yet no constraint says so: it follows from a constraint over three features, the Bluetooth group and a constraint on a fourth one.</p>
+<p><img src="reference/figures/README-miband3-model.svg" alt="The feature model of the Mi Band 3" width="100%"></p>
+<p><em>The feature model of the Mi Band 3: a tree of mandatory, optional and alternative features, and five cross-tree constraints (c1 to c5). Core features are shaded; five of them are grouped in one box.</em></p>
 <p><img src="reference/figures/README-graphs.svg" alt="The three graphs of the Mi Band 3" width="100%"></p>
 <p><em>The graphs of the Mi Band 3: requires (blue arrows), excludes (red dashes) and at least one (green dots). Screen, OLED and CapacityButton, always selected together, are one node.</em></p>
 <p>Because each link joins just two features, the graphs are <strong>plain graphs</strong>, which pays off twice:</p>
@@ -256,6 +258,17 @@
 <li>A <strong>“yes” can be wrong</strong>, though rarely: a rule that ties three or more features at once without forcing anything on any two of them is in no graph. If a battery cannot power NFC, the heart-rate sensor and the touch screen at once, the graphs stay the same, and they accept the three together.</li>
 </ul>
 <p><code><a href="articles/limits-theory.html">vignette("limits-theory")</a></code> proves these guarantees and measures how often a “yes” is wrong on real models.</p>
+</div>
+<div class="section level2">
+<h2 id="built-on">Built on<a class="anchor" aria-label="anchor" href="#built-on"></a>
+</h2>
+<p>variplex is built upon two tools developed by Rubén Heradio and colleagues:</p>
+<ul>
+<li>
+<a href="https://github.com/rheradio/strong4vm" class="external-link">Strong4VM</a>, which extracts the graphs of strong relationships from a variability model (<a href="https://doi.org/10.1016/j.softx.2026.102663" class="external-link">Heradio et al., 2026</a>);</li>
+<li>BoneDigger, a backbone solver, which finds the literals that hold in every valid configuration of a model.</li>
+</ul>
+<p>Their C++ code, with the SAT solver Glucose, is compiled into the package, so nothing has to be installed outside R.</p>
 </div>
 <div class="section level2">
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>

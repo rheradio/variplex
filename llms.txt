@@ -36,14 +36,23 @@ configuration, and *dead* ones, in none, are reported apart; abstract
 features, which only name groups of the tree, are left out.
 
 Take the Mi Band 3, a fitness band that comes with the package. Its
-feature model is a tree with five cross-tree constraints; it has 8 core
-features and 11 variable ones. Its graphs have 21 dependencies, 10
-conflicts and 3 at-least-one links, and only 11 of these 34 links are
-written in the model as a tree edge, a group or a constraint between two
-features. The others arise as constraints combine. For instance, every
-band with Bluetooth 4.2 has a heart-rate sensor, yet no constraint says
-so: it follows from a constraint over three features, the Bluetooth
-group and a constraint on a fourth one.
+[feature
+model](https://github.com/rheradio/variplex/blob/main/inst/extdata/miband3_realized.uvl)
+is a tree with five cross-tree constraints; it has 8 core features and
+11 variable ones. Its graphs have 21 dependencies, 10 conflicts and 3
+at-least-one links, and only 11 of these 34 links are written in the
+model as a tree edge, a group or a constraint between two features. The
+others arise as constraints combine. For instance, every band with
+Bluetooth 4.2 has a heart-rate sensor, yet no constraint says so: it
+follows from a constraint over three features, the Bluetooth group and a
+constraint on a fourth one.
+
+![The feature model of the Mi Band
+3](reference/figures/README-miband3-model.svg)
+
+*The feature model of the Mi Band 3: a tree of mandatory, optional and
+alternative features, and five cross-tree constraints (c1 to c5). Core
+features are shaded; five of them are grouped in one box.*
 
 ![The three graphs of the Mi Band
 3](reference/figures/README-graphs.svg)
@@ -225,6 +234,20 @@ nothing more:
 [`vignette("limits-theory")`](https://rheradio.github.io/variplex/articles/limits-theory.md)
 proves these guarantees and measures how often a “yes” is wrong on real
 models.
+
+## Built on
+
+variplex is built upon two tools developed by Rubén Heradio and
+colleagues:
+
+- [Strong4VM](https://github.com/rheradio/strong4vm), which extracts the
+  graphs of strong relationships from a variability model ([Heradio et
+  al., 2026](https://doi.org/10.1016/j.softx.2026.102663));
+- BoneDigger, a backbone solver, which finds the literals that hold in
+  every valid configuration of a model.
+
+Their C++ code, with the SAT solver Glucose, is compiled into the
+package, so nothing has to be installed outside R.
 
 ## Documentation
 
