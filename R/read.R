@@ -28,7 +28,7 @@
 #' @param name A short name for the model, used in tables; by default the last
 #'   part of the prefix.
 #' @param artificial What to do with nodes whose names look like helper
-#'   variables of a translation ("k!12", "__VISIBILITY__X", "<unsupported>"):
+#'   variables of a translation (`"k!12"`, `"__VISIBILITY__X"`, `"<unsupported>"`):
 #'   "keep" (default) or "drop". Strong4VM 2.0 already drops them; "drop" is for
 #'   the graphs of version 1, such as those of the Zenodo dataset.
 #' @param translator With artificial = "drop": "kmax" (default) or

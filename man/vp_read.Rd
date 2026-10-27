@@ -20,7 +20,7 @@ vp_read(
 part of the prefix.}
 
 \item{artificial}{What to do with nodes whose names look like helper
-variables of a translation ("k!12", "__VISIBILITY__X", "\if{html}{\out{<unsupported>}}"):
+variables of a translation (\code{"k!12"}, \code{"__VISIBILITY__X"}, \code{"<unsupported>"}):
 "keep" (default) or "drop". Strong4VM 2.0 already drops them; "drop" is for
 the graphs of version 1, such as those of the Zenodo dataset.}
 

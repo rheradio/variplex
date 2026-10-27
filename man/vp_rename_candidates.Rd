@@ -38,7 +38,7 @@ This function pairs each removed feature with the added feature whose links
 to the kept features are most alike (Jaccard index of their typed
 neighbours), one to one (a maximum matching). With \code{file}, the pairs whose
 names are alike too (name_similarity >= \code{name_threshold}) are written to it,
-one "old\if{html}{\out{<tab>}}new" per line, ready for \code{\link[=vp_rename]{vp_rename()}} (and for the command
+one \verb{old<tab>new} per line, ready for \code{\link[=vp_rename]{vp_rename()}} (and for the command
 \verb{strong4vm diff --rename}).
 }
 \examples{

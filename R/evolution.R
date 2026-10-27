@@ -964,7 +964,7 @@ vp_flip_flops <- function(history, min_moves = 2) {
 #' to the kept features are most alike (Jaccard index of their typed
 #' neighbours), one to one (a maximum matching). With `file`, the pairs whose
 #' names are alike too (name_similarity >= `name_threshold`) are written to it,
-#' one "old<tab>new" per line, ready for [vp_rename()] (and for the command
+#' one `old<tab>new` per line, ready for [vp_rename()] (and for the command
 #' `strong4vm diff --rename`).
 #'
 #' @param old The older version of a model (from [vp_generate()] or

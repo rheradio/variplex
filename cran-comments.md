@@ -5,25 +5,33 @@ This is a new submission.
 ## Test environments
 
 * local: Ubuntu 24.04 (WSL2), R 4.3.3, GCC 13
-* TO DO before submitting: win-builder (`devtools::check_win_devel()`), the macOS builder
-  (`devtools::check_mac_release()`), R-hub (`rhub::rhub_check()`, including the sanitizer builds), and the GitHub
-  Actions workflow of the package (macOS, Windows, Linux with R devel, release and oldrel).
+* win-builder: R 4.6.1 (release), Windows
+* GitHub Actions: Windows and macOS (R release); Ubuntu (R devel, release and oldrel-1)
+* R-hub: Linux, Windows and macOS (R devel), clang ASan/UBSan and valgrind
 
 ## R CMD check results
 
-Local (`R CMD check --as-cran`, Ubuntu 24.04, R 4.3.3): 0 errors, 1 warning, 6 notes, all of them from the machine
-or the state of the repository, not from the package:
+0 errors | 0 warnings | notes as follows.
 
-* WARNING `qpdf` is needed: not installed on that machine.
-* NOTE new submission; the URLs of the GitHub repository answer 404 until the repository is published.
-* NOTE `rsvg` (suggested) not available on that machine; the tests that need it are skipped.
-* NOTE unable to verify current time; HTML validation skipped (no `tidy`); `-mno-omit-leaf-frame-pointer` comes from
-  the flags with which Ubuntu built R.
-* NOTE installed size 65 Mb: `libs` (50 Mb, with debugging symbols) holds a SAT solver (Glucose 3.0), a backbone
-  solver and the ANTLR 4 C++ runtime, which parses the Universal Variability Language; `doc` (11 Mb) holds the
-  vignettes, with their figures embedded.
+Local (`R CMD check --as-cran`, Ubuntu 24.04, R 4.3.3): 5 notes.
 
-TO DO: the same on win-builder, the macOS builder, R-hub and GitHub Actions.
+* New submission.
+* Installed size 65 Mb: `libs` (50 Mb, with debugging symbols) holds a SAT solver (Glucose 3.0), a backbone solver
+  and the ANTLR 4 C++ runtime, which parses the Universal Variability Language; `doc` (11 Mb) holds the vignettes,
+  with their figures embedded.
+* Unable to verify current time: a limitation of that machine.
+* Non-portable flag `-mno-omit-leaf-frame-pointer`: it comes from the flags with which Ubuntu built R, not from the
+  package's `Makevars`.
+* HTML validation of the manual (`<unsupported>` in `vp_read.Rd`, `<tab>` in `vp_rename_candidates.Rd`): fixed
+  after these checks; both are now code.
+
+win-builder (R 4.6.1): 2 notes.
+
+* New submission. "Possibly misspelled words in DESCRIPTION": combinatorial, satisfiability and tibbles are spelt
+  correctly.
+* HTML validation of the manual: the same as above, now fixed.
+
+GitHub Actions and R-hub: all checks passed.
 
 ## Reverse dependencies
 
