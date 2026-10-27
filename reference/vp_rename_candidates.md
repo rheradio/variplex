@@ -6,7 +6,7 @@ added. This function pairs each removed feature with the added feature
 whose links to the kept features are most alike (Jaccard index of their
 typed neighbours), one to one (a maximum matching). With `file`, the
 pairs whose names are alike too (name_similarity \>= `name_threshold`)
-are written to it, one "oldnew" per line, ready for
+are written to it, one `old<tab>new` per line, ready for
 [`vp_rename()`](https://rheradio.github.io/variplex/reference/vp_rename.md)
 (and for the command `strong4vm diff --rename`).
 
