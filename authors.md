@@ -36,11 +36,18 @@
 - **Dictino Chaos**. Contributor, copyright holder.  
   BoneDigger backbone solver
 
-- **Terence Parr**. Contributor.  
+- **Terence Parr**. Contributor, copyright holder.  
+  ANTLR 4 C++ runtime
+
+- **Sam Harwell**. Contributor, copyright holder.  
   ANTLR 4 C++ runtime
 
 - **The ANTLR Project**. Copyright holder.  
   ANTLR 4 C++ runtime
+
+- **The UVL parser contributors**. Copyright holder.  
+  UVL grammar from which the parser in src/s4/uvl2dimacs/parser was
+  generated
 
 ## Citation
 
