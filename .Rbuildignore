@@ -20,3 +20,4 @@
 ^\.playwright-mcp$
 ^air\.toml$
 ^\.lintr$
+^\.serena$

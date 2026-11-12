@@ -1,3 +1,21 @@
+## Resubmission
+
+This is a resubmission. In response to the comments of Leonore Hochhauser:
+
+* DESCRIPTION: single quotes are now used only for software names ('KMax', 'KConfigReader', 'KconfigSampler',
+  'TraVarT', 'Glucose'), not for languages or file formats (UVL, DIMACS, Pajek).
+* DESCRIPTION: the reference to the companion data set now gives authors and year:
+  Heradio et al. (2026) <doi:10.5281/zenodo.17277788>.
+* Authors@R: we went through every copyright notice and `@author` tag in `src/` and added the ones that were
+  missing: Sam Harwell (ctb, cph) and Terence Parr (now also cph), named in the headers of the ANTLR 4 C++
+  runtime, and the contributors of the UVL grammar (cph), from which the parser in `src/s4/uvl2dimacs/parser` was
+  generated. Every author, contributor and copyright holder of the code in `src/` is now in `Authors@R`, with the
+  component they wrote, and `inst/COPYRIGHTS` gives each component's copyright notice and licence.
+* License: changed from MIT to LGPL-3. While checking authorship we found that the generated UVL parser derives
+  from the UVL grammar, which is under the LGPL-3.0; the package as a whole is therefore distributed under the
+  LGPL-3. The other components (MIT and BSD 3-clause) keep their own licences, which are compatible with it, and
+  `inst/COPYRIGHTS` lists them.
+
 ## Submission
 
 This is a new submission.

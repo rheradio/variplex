@@ -15,26 +15,29 @@ Authors@R: c(
     person("Niklas", "Eén", role = c("ctb", "cph"), comment = "MiniSat, on which Glucose is based"),
     person("Niklas", "Sörensson", role = c("ctb", "cph"), comment = "MiniSat, on which Glucose is based"),
     person("Dictino", "Chaos", role = c("ctb", "cph"), comment = "BoneDigger backbone solver"),
-    person("Terence", "Parr", role = c("ctb"), comment = "ANTLR 4 C++ runtime"),
-    person("The ANTLR Project", role = "cph", comment = "ANTLR 4 C++ runtime")
+    person("Terence", "Parr", role = c("ctb", "cph"), comment = "ANTLR 4 C++ runtime"),
+    person("Sam", "Harwell", role = c("ctb", "cph"), comment = "ANTLR 4 C++ runtime"),
+    person("The ANTLR Project", role = "cph", comment = "ANTLR 4 C++ runtime"),
+    person("The UVL parser contributors", role = "cph",
+           comment = "UVL grammar from which the parser in src/s4/uvl2dimacs/parser was generated")
   )
 Description: Computes and analyses the strong binary relationships of a
     variability model (a feature model, or the configuration space of a
     system such as the Linux kernel): which features require others,
     which exclude each other and of which pairs at least one must be
     selected, in every valid configuration. Models are read in the
-    Universal Variability Language ('UVL') or as Boolean formulas in
-    'DIMACS' format, such as those that 'KMax', 'KConfigReader',
+    Universal Variability Language (UVL) or as Boolean formulas in
+    DIMACS format, such as those that 'KMax', 'KConfigReader',
     'KconfigSampler' or 'TraVarT' produce from other notations. A
     satisfiability solver ('Glucose') finds the relationships; the
-    resulting graphs are written as 'Pajek' files and analysed with more
+    resulting graphs are written as Pajek files and analysed with more
     than one hundred functions that return tibbles: atomic sets,
     hierarchy, conflicts, configuration and team planning, combinatorial
     testing, network patterns and the evolution of a model through its
     versions. Rules that involve three or more features at once are not
     represented in the graphs. A companion data set of graphs for 5,709
-    models is available at <doi:10.5281/zenodo.17277788>.
-License: MIT + file LICENSE
+    models is described in Heradio et al. (2026) <doi:10.5281/zenodo.17277788>.
+License: LGPL-3
 URL: https://rheradio.github.io/variplex/, https://github.com/rheradio/variplex,
     https://github.com/rheradio/strong4vm
 BugReports: https://github.com/rheradio/variplex/issues
