@@ -23,7 +23,7 @@ Authors@R: c(
   )
 Description: Computes and analyses the strong binary relationships of a
     variability model (a feature model, or the configuration space of a
-    system such as the Linux kernel): which features require others,
+    system such as the 'Linux' kernel): which features require others,
     which exclude each other and of which pairs at least one must be
     selected, in every valid configuration. Models are read in the
     Universal Variability Language (UVL) or as Boolean formulas in
@@ -35,8 +35,13 @@ Description: Computes and analyses the strong binary relationships of a
     hierarchy, conflicts, configuration and team planning, combinatorial
     testing, network patterns and the evolution of a model through its
     versions. Rules that involve three or more features at once are not
-    represented in the graphs. A companion data set of graphs for 5,709
-    models is described in Heradio et al. (2026) <doi:10.5281/zenodo.17277788>.
+    represented in the graphs. UVL models are translated into Boolean
+    logic as in Heradio et al. (2027) <doi:10.1016/j.scico.2026.103549>,
+    the graphs are computed as in Heradio et al. (2026)
+    <doi:10.1016/j.softx.2026.102663> and analysed as networks as in
+    Sánchez-Ruiz et al. (2026) <doi:10.1007/978-3-032-40763-4_18>. A
+    companion data set of graphs for 5,709 models is described in Heradio
+    et al. (2026) <doi:10.5281/zenodo.17277788>.
 License: LGPL-3
 URL: https://rheradio.github.io/variplex/, https://github.com/rheradio/variplex,
     https://github.com/rheradio/strong4vm

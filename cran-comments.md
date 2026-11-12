@@ -2,10 +2,13 @@
 
 This is a resubmission. In response to the comments of Leonore Hochhauser:
 
-* DESCRIPTION: single quotes are now used only for software names ('KMax', 'KConfigReader', 'KconfigSampler',
+* DESCRIPTION: single quotes are now used only for software names ('Linux', 'KMax', 'KConfigReader', 'KconfigSampler',
   'TraVarT', 'Glucose'), not for languages or file formats (UVL, DIMACS, Pajek).
 * DESCRIPTION: the reference to the companion data set now gives authors and year:
   Heradio et al. (2026) <doi:10.5281/zenodo.17277788>.
+* DESCRIPTION: three references, in the same form, now cite the methods the package implements:
+  Heradio et al. (2027) <doi:10.1016/j.scico.2026.103549>, Heradio et al. (2026)
+  <doi:10.1016/j.softx.2026.102663> and Sánchez-Ruiz et al. (2026) <doi:10.1007/978-3-032-40763-4_18>.
 * Authors@R: we went through every copyright notice and `@author` tag in `src/` and added the ones that were
   missing: Sam Harwell (ctb, cph) and Terence Parr (now also cph), named in the headers of the ANTLR 4 C++
   runtime, and the contributors of the UVL grammar (cph), from which the parser in `src/s4/uvl2dimacs/parser` was
